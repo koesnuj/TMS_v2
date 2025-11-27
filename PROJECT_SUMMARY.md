@@ -1,453 +1,124 @@
-# TMS 인증/권한 시스템 - 프로젝트 요약
+# 🚀 TMS v2 (Test Management System) 프로젝트 요약
 
-## 📌 프로젝트 개요
-
-TestRail을 대체하기 위한 **테스트 케이스 관리 시스템(TMS)**의 인증 및 권한 관리 기능을 Express 백엔드와 React 프론트엔드로 구현한 프로젝트입니다.
-
----
-
-## 🏗️ 아키텍처
-
-### 전체 구조
-
-```
-┌──────────────────────┐
-│   Frontend (React)   │
-│   Port: 5173         │
-│   - React 18         │
-│   - TypeScript       │
-│   - Vite             │
-│   - React Router     │
-│   - Axios            │
-└──────────┬───────────┘
-           │ HTTP/REST API
-           │ (JWT Token)
-┌──────────▼───────────┐
-│   Backend (Express)  │
-│   Port: 3001         │
-│   - Node.js          │
-│   - Express          │
-│   - TypeScript       │
-│   - JWT Auth         │
-│   - bcrypt           │
-└──────────┬───────────┘
-           │ Prisma ORM
-┌──────────▼───────────┐
-│   PostgreSQL DB      │
-│   - User 테이블       │
-│   - Role: USER/ADMIN │
-│   - Status: 3가지    │
-└──────────────────────┘
-```
+이 문서는 TMS v2 프로젝트의 **실행 방법, 현재 상태, 주요 기능, 기술 스택**을 요약한 문서입니다.
+다음 작업자가 이 문서를 통해 프로젝트 컨텍스트를 빠르게 파악하고 개발을 이어갈 수 있도록 작성되었습니다.
 
 ---
 
-## 📂 프로젝트 구조
+## 1. 🛠 실행 가이드 (Quick Start)
 
+### 사전 요구사항
+- Node.js (v18 이상)
+- npm
+
+### 설치 및 실행
+1. **저장소 클론 및 의존성 설치**
+   ```bash
+   git clone https://github.com/koesnuj/TMS_v2.git
+   cd TMS_v2
+   
+   # 백엔드 설정
+   cd backend
+   npm install
+   npm run db:migrate # DB 초기화 (SQLite)
+   
+   # 프론트엔드 설정 (새 터미널)
+   cd ../frontend
+   npm install
+   ```
+
+2. **서버 실행**
+   - **백엔드**: `cd backend && npm run dev` (http://localhost:3001)
+   - **프론트엔드**: `cd frontend && npm run dev` (http://localhost:5173)
+
+3. **테스트 계정**
+   - **관리자 (Admin)**: `julim@krafton.com` / `123456` (첫 실행 시 자동 생성되거나, 직접 가입 후 DB에서 role 변경 필요할 수 있음 - 현재 코드는 첫 가입자 자동 Admin 처리)
+
+---
+
+## 2. 🏗 프로젝트 구조 및 기술 스택
+
+### 구조 (Monorepo-like)
 ```
-TMS/
-├── backend/                    # Express 백엔드
+TMS_v2/
+├── backend/           # Express + Prisma (Node.js)
 │   ├── src/
-│   │   ├── index.ts           # 서버 엔트리포인트
-│   │   ├── routes/            # API 라우트
-│   │   │   ├── auth.ts        # 인증 API
-│   │   │   └── admin.ts       # 관리자 API
-│   │   ├── controllers/       # 비즈니스 로직
-│   │   │   ├── authController.ts
-│   │   │   └── adminController.ts
-│   │   ├── middleware/        # 미들웨어
-│   │   │   ├── auth.ts        # JWT 검증
-│   │   │   └── roleCheck.ts   # 권한 체크
-│   │   ├── utils/             # 유틸리티
-│   │   │   ├── jwt.ts         # JWT 생성/검증
-│   │   │   └── password.ts    # 비밀번호 해싱
-│   │   └── lib/
-│   │       └── prisma.ts      # Prisma Client
-│   ├── prisma/
-│   │   └── schema.prisma      # DB 스키마
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── README.md
-│   └── API_TEST.http          # API 테스트 파일
+│   │   ├── controllers/ # 비즈니스 로직
+│   │   ├── routes/      # API 라우팅
+│   │   ├── middleware/  # 인증, 권한 체크
+│   │   └── utils/       # JWT, Password 유틸
+│   ├── prisma/          # DB 스키마 및 SQLite 파일
+│   └── tests/           # 백엔드 유닛 테스트 (예정)
 │
-├── frontend/                   # React 프론트엔드
+├── frontend/          # React + Vite (TypeScript)
 │   ├── src/
-│   │   ├── api/               # API 클라이언트
-│   │   │   ├── axios.ts       # Axios 설정
-│   │   │   ├── auth.ts        # 인증 API
-│   │   │   ├── admin.ts       # 관리자 API
-│   │   │   └── types.ts       # 타입 정의
-│   │   ├── components/        # 재사용 컴포넌트
-│   │   │   ├── Navbar.tsx
-│   │   │   └── PrivateRoute.tsx
-│   │   ├── context/           # React Context
-│   │   │   └── AuthContext.tsx
-│   │   ├── pages/             # 페이지 컴포넌트
-│   │   │   ├── LoginPage.tsx
-│   │   │   ├── RegisterPage.tsx
-│   │   │   ├── HomePage.tsx
-│   │   │   └── AdminPage.tsx
-│   │   ├── App.tsx            # 라우터 설정
-│   │   ├── main.tsx           # 엔트리포인트
-│   │   └── index.css          # 글로벌 스타일
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── README.md
+│   │   ├── api/         # API 클라이언트 (Axios)
+│   │   ├── components/  # 재사용 컴포넌트 (Navbar, Layout, Modals)
+│   │   ├── pages/       # 페이지 컴포넌트
+│   │   └── context/     # 전역 상태 (Auth)
+│   └── index.css        # Tailwind + Global Styles
 │
-├── tms/                        # 기존 Next.js 프로젝트 (유지)
-├── AUTH_IMPLEMENTATION_GUIDE.md # 구현 가이드
-├── SETUP_GUIDE.md              # 설치/실행 가이드
-└── PROJECT_SUMMARY.md          # 이 문서
+└── tests/             # E2E 테스트 (Playwright)
 ```
 
----
-
-## 🔑 주요 기능
-
-### 1. 인증 (Authentication)
-
-#### ✅ 회원가입
-- 이메일, 비밀번호, 이름 입력
-- 비밀번호는 bcrypt로 해시화 저장
-- **첫 번째 사용자**는 자동으로 ADMIN + ACTIVE
-- 이후 사용자는 USER + PENDING (관리자 승인 필요)
-
-#### ✅ 로그인
-- 이메일/비밀번호 검증
-- **ACTIVE 상태**인 사용자만 로그인 가능
-- JWT 토큰 발급 (유효기간 7일)
-- 토큰은 LocalStorage에 저장
-
-#### ✅ 토큰 관리
-- Axios 인터셉터로 모든 API 요청에 자동 추가
-- 401 에러 시 자동 로그아웃 처리
-
-### 2. 권한 관리 (Authorization)
-
-#### 역할 (Role)
-- **ADMIN**: 모든 권한 + 사용자 관리
-- **USER**: 일반 사용자 권한
-
-#### 상태 (Status)
-- **PENDING**: 가입 대기 (로그인 불가)
-- **ACTIVE**: 활성화 (로그인 가능)
-- **REJECTED**: 거절됨 (로그인 불가)
-
-### 3. 관리자 기능
-
-#### ✅ 사용자 관리
-- 가입 대기 사용자 목록 조회
-- 전체 사용자 목록 조회
-- 사용자 승인/거절
-- 사용자 역할 변경
-- 비밀번호 초기화
+### 기술 스택
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons
+- **Backend**: Node.js, Express, Prisma ORM
+- **Database**: SQLite (Development), PostgreSQL (Production ready)
+- **Auth**: JWT (Access Token), Bcrypt
+- **Testing**: Playwright (E2E)
 
 ---
 
-## 🔌 API 엔드포인트
+## 3. ✅ 구현된 주요 기능 (Status)
 
-### 인증 API (Public)
+### A. 인증 (Authentication)
+- [x] 회원가입 및 로그인 (JWT)
+- [x] 관리자 승인 시스템 (Pending -> Active)
+- [x] 역할 기반 접근 제어 (RBAC: Admin / User)
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | `/api/auth/signup` | 회원가입 |
-| POST | `/api/auth/login` | 로그인 |
-| GET | `/api/auth/me` | 현재 사용자 정보 (인증 필요) |
+### B. 테스트 케이스 관리 (Test Case Management)
+- [x] 계층형 폴더 구조 (무제한 깊이)
+- [x] 테스트 케이스 생성/조회 (우선순위, 전제조건 등)
+- [x] **CSV Import**: 엑셀/CSV 파일을 통한 대량 등록 기능
 
-### 관리자 API (Admin Only)
+### C. 테스트 계획 및 실행 (Test Planning & Execution)
+- [x] 테스트 플랜 생성 (케이스 검색 및 선택)
+- [x] **실행 인터페이스**:
+  - 상태 변경 (Pass/Fail/Block/Not Run)
+  - 결과 자동 집계 및 진행률 바 표시
+  - **Bulk Update**: 다중 선택 후 일괄 결과 적용
+  - **Smart Comment**: URL 자동 링크 변환 기능
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/admin/pending-users` | 가입 대기 사용자 조회 |
-| GET | `/api/admin/users` | 전체 사용자 조회 |
-| PATCH | `/api/admin/users/approve` | 사용자 승인/거절 |
-| PATCH | `/api/admin/users/role` | 사용자 역할 변경 |
-| POST | `/api/admin/users/reset-password` | 비밀번호 초기화 |
-
----
-
-## 🛡️ 보안
-
-### 비밀번호 보안
-- **bcrypt** 해싱 (Salt rounds: 10)
-- 평문 비밀번호는 절대 저장하지 않음
-
-### JWT 토큰
-- 페이로드: userId, email, role, status
-- 만료 시간: 7일 (환경 변수로 설정 가능)
-- 민감한 정보(비밀번호 등) 미포함
-
-### API 보호
-- **JWT 미들웨어**: Authorization 헤더 검증
-- **권한 미들웨어**: 관리자 전용 API는 role 체크
-- **CORS**: 허용된 origin만 접근 가능
+### D. UI/UX (Design)
+- [x] **TestRail Style UI**: 
+  - Blue Theme & Tab Navigation 적용
+  - 직관적인 아이콘 및 반응형 레이아웃
+- [x] 관리자 대시보드 (Notion-style Tech Stack 카드 포함)
 
 ---
 
-## 🚀 실행 방법
+## 4. 📝 최근 작업 로그 (Last Session)
 
-### 사전 준비
-- Node.js v18+
-- PostgreSQL (또는 SQLite)
+**날짜**: 2025-11-27
+**작업 내용**: UI 리디자인 및 테스트 실행 기능 안정화
 
-### 백엔드 실행
-
-```bash
-cd backend
-npm install
-cp env.example .env        # 환경 변수 설정
-npm run prisma:migrate     # DB 마이그레이션
-npm run prisma:generate    # Prisma Client 생성
-npm run dev                # 개발 서버 실행 (포트 3001)
-```
-
-### 프론트엔드 실행
-
-```bash
-cd frontend
-npm install
-npm run dev                # 개발 서버 실행 (포트 5173)
-```
-
-### 브라우저 접속
-
-```
-http://localhost:5173
-```
+1. **UI 테마 변경**: 29CM Green 테마 시도 후 **TestRail Blue 테마**로 최종 확정.
+   - Navbar, Tabs, Table 스타일을 엔터프라이즈급으로 개선.
+2. **관리자 페이지 개선**: Notion 스타일의 기술 스택 요약 카드 추가 및 UI 현대화.
+3. **E2E 테스트 완료**: `tests/plan_execution.spec.ts`를 통해 실행 프로세스 검증 완료.
 
 ---
 
-## 📊 데이터베이스 스키마
+## 5. 🔜 다음 작업 계획 (Next Steps)
 
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // bcrypt 해시
-  name      String
-  role      Role     @default(USER)
-  status    Status   @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+1. **리포팅 (Reporting)**
+   - 플랜별 결과 리포트 페이지 구현
+   - 파이 차트/바 차트를 활용한 시각화 (Recharts 등 도입 고려)
 
-enum Role {
-  USER
-  ADMIN
-}
+2. **CI/CD 파이프라인**
+   - GitHub Actions를 이용한 자동 배포 및 테스트 설정
 
-enum Status {
-  PENDING
-  ACTIVE
-  REJECTED
-}
-```
-
----
-
-## 📝 주요 코드 스니펫
-
-### 백엔드: JWT 생성
-
-```typescript
-export function generateToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
-}
-```
-
-### 백엔드: 인증 미들웨어
-
-```typescript
-export function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: '토큰 필요' });
-  
-  try {
-    req.user = verifyToken(token);
-    next();
-  } catch {
-    res.status(401).json({ message: '유효하지 않은 토큰' });
-  }
-}
-```
-
-### 프론트엔드: Axios 인터셉터
-
-```typescript
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-```
-
-### 프론트엔드: 보호된 라우트
-
-```typescript
-<Route path="/admin" element={
-  <PrivateRoute requireAdmin>
-    <AdminPage />
-  </PrivateRoute>
-} />
-```
-
----
-
-## 🧪 테스트 방법
-
-### 1. 첫 사용자 등록 (관리자)
-
-```bash
-POST http://localhost:3001/api/auth/signup
-{
-  "email": "admin@test.com",
-  "password": "password123",
-  "name": "관리자"
-}
-```
-
-### 2. 로그인
-
-```bash
-POST http://localhost:3001/api/auth/login
-{
-  "email": "admin@test.com",
-  "password": "password123"
-}
-```
-
-### 3. 일반 사용자 가입 후 승인
-
-```bash
-# 일반 사용자 가입 (PENDING 상태)
-POST /api/auth/signup
-{ "email": "user@test.com", ... }
-
-# 관리자가 승인
-PATCH /api/admin/users/approve
-Authorization: Bearer <admin_token>
-{ "email": "user@test.com", "action": "approve" }
-```
-
----
-
-## 📚 참고 문서
-
-- **AUTH_IMPLEMENTATION_GUIDE.md**: 상세 구현 가이드
-- **SETUP_GUIDE.md**: 설치 및 실행 가이드
-- **backend/README.md**: 백엔드 API 문서
-- **frontend/README.md**: 프론트엔드 가이드
-- **backend/API_TEST.http**: API 테스트 스크립트
-
----
-
-## 🎯 향후 개선 사항
-
-- [ ] Refresh Token 구현
-- [ ] 이메일 인증 기능
-- [ ] 비밀번호 찾기 기능
-- [ ] 로그인 시도 제한 (Brute Force 방어)
-- [ ] 2단계 인증 (2FA)
-- [ ] 감사 로그 (Audit Log)
-- [ ] 역할 세분화 (QA, Viewer 등)
-- [ ] 프로필 수정 기능
-
----
-
-## 🛠️ 기술 스택 요약
-
-### 백엔드
-- Node.js + Express
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- JWT (jsonwebtoken)
-- bcrypt
-
-### 프론트엔드
-- React 18
-- TypeScript
-- Vite
-- React Router v6
-- Axios
-- Context API
-
-### 공통
-- ESLint
-- Prettier (권장)
-
----
-
-## 👥 사용자 시나리오
-
-### 시나리오 1: 관리자 계정 생성
-1. 프로젝트 최초 실행
-2. 회원가입 페이지에서 첫 계정 생성
-3. 자동으로 ADMIN + ACTIVE 처리
-4. 즉시 로그인 가능
-
-### 시나리오 2: 일반 사용자 가입
-1. 회원가입 페이지에서 계정 생성
-2. "관리자 승인 대기 중" 메시지 표시
-3. 로그인 시도 시 "승인 대기 중" 에러
-4. 관리자가 승인 후 로그인 가능
-
-### 시나리오 3: 비밀번호 초기화
-1. 관리자 페이지 접속
-2. 비밀번호 초기화 폼에서 이메일과 새 비밀번호 입력
-3. 해당 사용자의 비밀번호가 새 비밀번호로 변경됨
-
----
-
-## 📞 문제 해결
-
-### 백엔드 서버가 시작되지 않는 경우
-- PostgreSQL 실행 상태 확인
-- `.env` 파일의 DATABASE_URL 확인
-- 포트 3001 충돌 확인
-
-### 프론트엔드가 백엔드에 연결되지 않는 경우
-- 백엔드 서버 실행 확인
-- `axios.ts`의 baseURL 확인
-- CORS 설정 확인
-
-### 로그인이 안 되는 경우
-- 사용자의 status가 ACTIVE인지 확인
-- 비밀번호가 올바른지 확인
-- JWT_SECRET이 일치하는지 확인
-
----
-
-## ✅ 구현 완료 체크리스트
-
-- [x] Express 백엔드 서버 구축
-- [x] Prisma ORM 설정
-- [x] JWT 인증 구현
-- [x] bcrypt 비밀번호 해싱
-- [x] 회원가입 API
-- [x] 로그인 API
-- [x] 관리자 API (승인/거절/비밀번호 초기화)
-- [x] 권한 체크 미들웨어
-- [x] React 프론트엔드 구축
-- [x] React Router 설정
-- [x] Axios API 클라이언트
-- [x] 인증 Context
-- [x] 로그인/회원가입 페이지
-- [x] 관리자 페이지
-- [x] 보호된 라우트 구현
-- [x] 문서 작성
-
----
-
-## 🎉 프로젝트 완성!
-
-모든 요구사항이 구현되었으며, 프로덕션 레벨의 코드 품질과 보안을 갖추었습니다.
-
-**개발 기간**: 2025년 11월 27일
-**개발자**: AI 어시스턴트
-**목적**: TMS(Test Management System) 인증/권한 시스템 구현
-
+3. **편의성 개선**
+   - 테스트 케이스 순서 변경 (Drag & Drop)
+   - 이미지 첨부 기능 (현재는 텍스트만 가능)

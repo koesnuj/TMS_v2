@@ -1,0 +1,26 @@
+{
+  "name": "tms_v2",
+  "version": "1.0.0",
+  "description": "TestRail을 대체하는 자체 구축형 테스트 케이스 관리 시스템입니다.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koesnuj/TMS_v2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/koesnuj/TMS_v2/issues"
+  },
+  "homepage": "https://github.com/koesnuj/TMS_v2#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
