@@ -162,3 +162,60 @@ export async function importTestCases(req: AuthRequest, res: Response): Promise<
   }
 }
 
+// 테스트케이스 수정
+export async function updateTestCase(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { title, description, precondition, steps, expectedResult, priority } = req.body;
+
+    // 존재 여부 확인
+    const existingCase = await prisma.testCase.findUnique({ where: { id } });
+    if (!existingCase) {
+      res.status(404).json({ success: false, message: '테스트케이스를 찾을 수 없습니다.' });
+      return;
+    }
+
+    const updatedCase = await prisma.testCase.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        precondition,
+        steps,
+        expectedResult,
+        priority
+      }
+    });
+
+    res.json({ success: true, data: updatedCase });
+  } catch (error) {
+    console.error('Update testcase error:', error);
+    res.status(500).json({ success: false, message: '테스트케이스 수정 실패' });
+  }
+}
+
+// 테스트케이스 삭제
+export async function deleteTestCase(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    // 존재 여부 확인
+    const existingCase = await prisma.testCase.findUnique({ where: { id } });
+    if (!existingCase) {
+      res.status(404).json({ success: false, message: '테스트케이스를 찾을 수 없습니다.' });
+      return;
+    }
+
+    // 트랜잭션으로 관련 PlanItem 삭제 후 TestCase 삭제
+    await prisma.$transaction([
+      prisma.planItem.deleteMany({ where: { testCaseId: id } }),
+      prisma.testCase.delete({ where: { id } })
+    ]);
+
+    res.json({ success: true, message: '테스트케이스가 삭제되었습니다.' });
+  } catch (error) {
+    console.error('Delete testcase error:', error);
+    res.status(500).json({ success: false, message: '테스트케이스 삭제 실패' });
+  }
+}
+

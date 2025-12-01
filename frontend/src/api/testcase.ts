@@ -38,6 +38,16 @@ export const importTestCases = async (folderId: string | null, file: File, mappi
   return response.data;
 };
 
+export const updateTestCase = async (id: string, data: Partial<TestCase>) => {
+  const response = await api.patch<{ success: boolean; data: TestCase }>(`/testcases/${id}`, data);
+  return response.data;
+};
+
+export const deleteTestCase = async (id: string) => {
+  const response = await api.delete<{ success: boolean; message: string }>(`/testcases/${id}`);
+  return response.data;
+};
+
 
 
 

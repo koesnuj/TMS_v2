@@ -1,20 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { FolderTree } from '../components/FolderTree';
 import { CsvImportModal } from '../components/CsvImportModal';
-import { CreateTestCaseModal } from '../components/CreateTestCaseModal';
+import { TestCaseFormModal } from '../components/TestCaseFormModal';
 import { getFolderTree, createFolder, FolderTreeItem } from '../api/folder';
-import { getTestCases, TestCase } from '../api/testcase';
-import { Plus, Upload, FileText, MoreHorizontal } from 'lucide-react';
+import { getTestCases, TestCase, deleteTestCase } from '../api/testcase';
+import { Plus, Upload, FileText, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 const TestCasesPage: React.FC = () => {
   const [folders, setFolders] = useState<FolderTreeItem[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Edit/Create Modal State
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingTestCase, setEditingTestCase] = useState<TestCase | null>(null);
+  
+  // Delete Modal State
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [testCaseToDelete, setTestCaseToDelete] = useState<TestCase | null>(null);
+
+  // Dropdown State
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdownId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // 폴더 트리 로드
   const loadFolderTree = async () => {
@@ -65,8 +83,47 @@ const TestCasesPage: React.FC = () => {
     }
   };
 
-  const handleImportSuccess = () => {
+  const handleSuccess = () => {
     loadTestCases(selectedFolderId);
+  };
+
+  // Create
+  const handleCreateClick = () => {
+    setEditingTestCase(null);
+    setIsFormModalOpen(true);
+  };
+
+  // Edit
+  const handleEditClick = (tc: TestCase, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveDropdownId(null);
+    setEditingTestCase(tc);
+    setIsFormModalOpen(true);
+  };
+
+  // Delete
+  const handleDeleteClick = (tc: TestCase, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveDropdownId(null);
+    setTestCaseToDelete(tc);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!testCaseToDelete) return;
+    try {
+      await deleteTestCase(testCaseToDelete.id);
+      loadTestCases(selectedFolderId);
+      setTestCaseToDelete(null);
+      setIsConfirmModalOpen(false);
+    } catch (error) {
+      alert('Failed to delete test case');
+    }
+  };
+
+  const toggleDropdown = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveDropdownId(activeDropdownId === id ? null : id);
   };
 
   return (
@@ -116,7 +173,7 @@ const TestCasesPage: React.FC = () => {
             <Button 
               variant="primary" 
               icon={<Plus size={16} />} 
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={handleCreateClick}
             >
               Add Case
             </Button>
@@ -133,13 +190,13 @@ const TestCasesPage: React.FC = () => {
               <h3 className="text-lg font-medium text-slate-900">No test cases found</h3>
               <p className="text-slate-500 mt-2">Select a folder or create a new test case to get started.</p>
               <div className="mt-6">
-                <Button onClick={() => setIsCreateModalOpen(true)} icon={<Plus size={16} />}>
+                <Button onClick={handleCreateClick} icon={<Plus size={16} />}>
                   Create First Case
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-visible pb-32"> {/* overflow-visible for dropdown, pb-32 for space */}
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
@@ -152,7 +209,11 @@ const TestCasesPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
                   {testCases.map((tc, index) => (
-                    <tr key={tc.id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <tr 
+                      key={tc.id} 
+                      className="hover:bg-slate-50 transition-colors cursor-pointer group relative"
+                      onClick={() => handleEditClick(tc, {} as any)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
                         C{index + 1}
                       </td>
@@ -172,8 +233,33 @@ const TestCasesPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 truncate max-w-md">
                         {tc.precondition || <span className="text-slate-300">-</span>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                         <MoreHorizontal className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer" />
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                         <button 
+                           onClick={(e) => toggleDropdown(tc.id, e)}
+                           className="p-1 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                         >
+                           <MoreHorizontal className="w-4 h-4" />
+                         </button>
+                         
+                         {/* Dropdown Menu */}
+                         {activeDropdownId === tc.id && (
+                           <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg border border-slate-200 z-10 py-1">
+                             <button
+                               onClick={(e) => handleEditClick(tc, e)}
+                               className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center gap-2 transition-colors"
+                             >
+                               <Edit size={14} />
+                               Edit
+                             </button>
+                             <button
+                               onClick={(e) => handleDeleteClick(tc, e)}
+                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                             >
+                               <Trash2 size={14} />
+                               Delete
+                             </button>
+                           </div>
+                         )}
                       </td>
                     </tr>
                   ))}
@@ -189,15 +275,28 @@ const TestCasesPage: React.FC = () => {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         currentFolderId={selectedFolderId}
-        onSuccess={handleImportSuccess}
+        onSuccess={handleSuccess}
       />
 
-      <CreateTestCaseModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+      <TestCaseFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
         folderId={selectedFolderId}
-        onSuccess={handleImportSuccess}
+        onSuccess={handleSuccess}
+        initialData={editingTestCase}
       />
+
+      {testCaseToDelete && (
+        <ConfirmModal
+          isOpen={isConfirmModalOpen}
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          title="Delete Test Case"
+          message={`Are you sure you want to delete "${testCaseToDelete.title}"? This action cannot be undone.`}
+          confirmText="Delete"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };
