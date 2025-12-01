@@ -6,6 +6,7 @@ import adminRoutes from './routes/admin';
 import folderRoutes from './routes/folders';
 import testCaseRoutes from './routes/testcases';
 import planRoutes from './routes/plans';
+import dashboardRoutes from './routes/dashboard';
 
 // 환경 변수 로드
 dotenv.config();
@@ -48,6 +49,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/folders', folderRoutes);
 app.use('/api/testcases', testCaseRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 핸들러
 app.use((req: Request, res: Response) => {
