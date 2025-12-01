@@ -3,13 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getPlanDetail, getPlans, PlanDetail, Plan, updatePlanItem, bulkUpdatePlanItems, TestResult, PlanItem } from '../api/plan';
 import { getAllUsers } from '../api/admin';
 import { User } from '../api/types';
-import { ArrowLeft, Search, PlayCircle, CheckSquare, Square } from 'lucide-react';
+import { ArrowLeft, Search, PlayCircle, CheckSquare, Square, Download, FileText, Table } from 'lucide-react';
 import { TestCaseDetailColumn } from '../components/TestCaseDetailColumn';
 import { RunSummary } from '../components/RunSummary';
 import { StackedProgressBar } from '../components/StackedProgressBar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { exportToPDF, exportToExcel } from '../utils/export';
 
 /**
  * PlanDetailPage3Column - 3-컬럼 레이아웃
@@ -121,6 +122,17 @@ const PlanDetailPage3Column: React.FC = () => {
     } catch (error) {
       console.error('Failed to load users', error);
     }
+  };
+
+  // Export Handlers
+  const handleExportPDF = () => {
+    if (!plan) return;
+    exportToPDF({ plan, items: filteredItems });
+  };
+
+  const handleExportExcel = () => {
+    if (!plan) return;
+    exportToExcel({ plan, items: filteredItems });
   };
 
   // 행 클릭 핸들러: 디테일 컬럼 표시
@@ -364,14 +376,33 @@ const PlanDetailPage3Column: React.FC = () => {
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col flex-1">
               {/* Toolbar */}
               <div className="px-6 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 flex-shrink-0">
-                <div className="text-sm text-slate-600">
-                  {selectedItemIds.size > 0 ? (
-                    <span className="font-semibold text-indigo-600">
-                      {selectedItemIds.size} selected
-                    </span>
-                  ) : (
-                    <span>{filteredItems.length} of {totalItems} test cases</span>
-                  )}
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-slate-600">
+                    {selectedItemIds.size > 0 ? (
+                      <span className="font-semibold text-indigo-600">
+                        {selectedItemIds.size} selected
+                      </span>
+                    ) : (
+                      <span>{filteredItems.length} of {totalItems} test cases</span>
+                    )}
+                  </div>
+                  <div className="h-4 w-px bg-slate-300 mx-2"></div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleExportPDF}
+                      className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+                      title="Export as PDF"
+                    >
+                      <FileText size={14} /> PDF
+                    </button>
+                    <button 
+                      onClick={handleExportExcel}
+                      className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 hover:text-emerald-600 transition-colors"
+                      title="Export as Excel"
+                    >
+                      <Table size={14} /> Excel
+                    </button>
+                  </div>
                 </div>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
