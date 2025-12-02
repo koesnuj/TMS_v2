@@ -1,41 +1,52 @@
 # TMS - Test Management System
 
-TestRail을 대체하는 자체 구축형 테스트 케이스 관리 시스템입니다.
+**가장 쉽게 테스트 케이스를 관리하는 방법**
 
-## 🎯 프로젝트 구성
-
-이 저장소는 세 가지 독립적인 프로젝트로 구성되어 있습니다:
-
-```
-TMS/
-├── backend/          # Express + TypeScript 백엔드 (인증 API)
-├── frontend/         # React + Vite 프론트엔드 (인증 UI)
-└── tms/              # Next.js 기반 메인 TMS 애플리케이션
-```
+복잡한 TestRail은 이제 그만! 직관적인 UI로 테스트 케이스를 작성하고, 실행 결과를 한눈에 확인하세요.
 
 ---
 
-## 🚀 빠른 시작
+## 주요 기능
 
-### 1. 인증 시스템 (백엔드 + 프론트엔드)
+### 테스트 케이스 관리가 쉬워요
 
-최신 구현된 Express 백엔드와 React 프론트엔드 기반 인증 시스템입니다.
+폴더별로 테스트를 정리하고, 드래그 앤 드롭으로 자유롭게 이동할 수 있어요. Rich Text Editor로 상세한 테스트 절차를 작성하세요.
 
-#### 백엔드 실행
+### 테스트 실행 계획(Plan)
+
+필요한 테스트만 선택해서 Plan을 만들고, 팀원에게 할당하세요. 실행 결과를 바로바로 기록할 수 있어요.
+
+### 한눈에 보는 결과
+
+도넛 차트와 프로그레스 바로 테스트 진행률을 실시간으로 확인하세요. Pass/Fail/Block 상태가 한눈에 들어와요.
+
+### CSV로 간편하게
+
+기존에 쓰던 엑셀 파일을 그대로 업로드하거나, 언제든 다운로드할 수 있어요.
+
+### 권한 관리
+
+관리자 승인 시스템으로 팀원을 안전하게 관리하고, 역할에 따라 접근 권한을 제어할 수 있어요.
+
+---
+
+## 설치하기
+
+### 백엔드 실행
 
 ```bash
 cd backend
 npm install
 cp env.example .env
-# .env 파일을 열어 DATABASE_URL 설정
-npm run prisma:migrate
+# .env 파일을 열어서 설정값을 입력하세요
 npm run prisma:generate
+npm run prisma:migrate
 npm run dev
 ```
 
-서버: `http://localhost:3001`
+서버가 `http://localhost:3001`에서 실행됩니다.
 
-#### 프론트엔드 실행
+### 프론트엔드 실행
 
 ```bash
 cd frontend
@@ -43,208 +54,90 @@ npm install
 npm run dev
 ```
 
-서버: `http://localhost:5173`
+서버가 `http://localhost:5173`에서 실행됩니다.
 
-### 2. 기존 TMS 시스템 (Next.js)
+---
 
-```bash
-cd tms
-npm install
-npm run dev
+## 사용 방법
+
+### 시작하기
+
+1. 프론트엔드 주소로 접속하면 로그인 화면이 나와요
+2. 회원가입 후 관리자 승인을 받으세요 (첫 사용자는 자동으로 관리자가 돼요!)
+3. 로그인하면 바로 사용할 수 있어요
+
+### 테스트 케이스 만들기
+
+* 좌측 폴더 트리에서 폴더를 만들고
+* 테스트 케이스를 추가하세요
+* 제목, 설명, 테스트 절차, 예상 결과를 작성할 수 있어요
+
+### Plan 실행하기
+
+* Plan 메뉴에서 새 계획을 만들고
+* 실행할 테스트들을 선택하세요
+* 담당자를 지정하고 결과를 기록하세요
+
+---
+
+## 활용 사례
+
+### QA 팀의 테스트 관리
+
+팀원들과 함께 테스트 케이스를 작성하고, 릴리즈마다 Plan을 만들어 실행 결과를 추적하세요.
+
+### 개인 프로젝트 테스트
+
+혼자서도 체계적으로 테스트를 관리하고 싶다면, TMS로 간편하게 시작하세요.
+
+### 회귀 테스트
+
+기존 테스트 케이스를 재사용해서 빠르게 회귀 테스트를 진행하세요.
+
+---
+
+## 기술 스택
+
+### 백엔드
+* **Electron 30** - Express + TypeScript
+* **Prisma** - SQLite 기반 ORM
+* **JWT** - 안전한 인증
+
+### 프론트엔드
+* **React 18** - TypeScript로 작성
+* **Vite** - 빠른 개발 환경
+* **Tailwind CSS** - 모던한 UI
+* **Tiptap** - Rich Text Editor
+* **@dnd-kit** - 드래그 앤 드롭
+
+---
+
+## 프로젝트 구조
+
 ```
-
-서버: `http://localhost:3000`
-
----
-
-## 📚 문서
-
-### 인증 시스템 문서
-- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - 설치 및 실행 가이드
-- **[AUTH_IMPLEMENTATION_GUIDE.md](./AUTH_IMPLEMENTATION_GUIDE.md)** - 구현 상세 가이드
-- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - 프로젝트 전체 요약
-- **[backend/README.md](./backend/README.md)** - 백엔드 API 문서
-- **[frontend/README.md](./frontend/README.md)** - 프론트엔드 가이드
-
-### 메인 TMS 문서
-- **[tms/DEV_LOG.md](./tms/DEV_LOG.md)** - 개발 로그 및 기술 문서
-- **[tms/CONVERSATION_LOG.md](./tms/CONVERSATION_LOG.md)** - 대화 로그
-
----
-
-## 🔑 주요 기능
-
-### 인증 시스템 (backend + frontend)
-
-- ✅ 회원가입 / 로그인
-- ✅ JWT 기반 인증
-- ✅ 역할 기반 권한 관리 (ADMIN / USER)
-- ✅ 관리자 승인 시스템 (PENDING / ACTIVE / REJECTED)
-- ✅ 비밀번호 초기화
-- ✅ 보호된 라우트
-
-### 메인 TMS 시스템 (tms)
-
-- ✅ 프로젝트 관리
-- ✅ 테스트 스위트 / 섹션 관리 (계층형 구조)
-- ✅ 테스트 케이스 CRUD
-- ✅ 테스트 실행 및 결과 관리
-- ✅ Excel Import/Export
-- ✅ E2E 테스트 (Playwright)
-
----
-
-## 🛠️ 기술 스택
-
-### 인증 시스템
-
-**백엔드**
-- Node.js + Express
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- JWT (jsonwebtoken)
-- bcrypt
-
-**프론트엔드**
-- React 18
-- TypeScript
-- Vite
-- React Router v6
-- Axios
-- Context API
-
-### 메인 TMS
-
-- Next.js 14.2.16 (App Router)
-- Prisma 5.12.0
-- SQLite
-- Tailwind CSS
-- Shadcn UI
-- Playwright (E2E)
-
----
-
-## 📖 API 엔드포인트 (인증 시스템)
-
-### 공개 API
-- `POST /api/auth/signup` - 회원가입
-- `POST /api/auth/login` - 로그인
-
-### 인증 필요
-- `GET /api/auth/me` - 현재 사용자 정보
-
-### 관리자 전용
-- `GET /api/admin/pending-users` - 가입 대기자 조회
-- `GET /api/admin/users` - 전체 사용자 조회
-- `PATCH /api/admin/users/approve` - 사용자 승인/거절
-- `POST /api/admin/users/reset-password` - 비밀번호 초기화
-
-자세한 API 문서는 `backend/API_TEST.http` 파일을 참고하세요.
-
----
-
-## 🔒 보안
-
-- bcrypt를 사용한 안전한 비밀번호 해싱
-- JWT 기반 토큰 인증 (만료 시간: 7일)
-- CORS 설정으로 허용된 origin만 접근
-- 관리자 API는 이중 검증 (인증 + 역할 체크)
-- 환경 변수로 민감 정보 관리
-
----
-
-## 📝 개발 로그
-
-### 2025-11-27: Express 백엔드 분리
-
-기존 Next.js Server Actions 기반 인증을 독립적인 Express 백엔드로 분리했습니다.
-
-**변경 사항**:
-- Express + TypeScript 백엔드 구축
-- React + Vite 프론트엔드 구축
-- RESTful API 설계
-- JWT 기반 인증 구현
-- Role-based 권한 관리
-
-자세한 내용은 `tms/DEV_LOG.md`를 참고하세요.
-
----
-
-## 🧪 테스트
-
-### 백엔드 API 테스트
-
-`backend/API_TEST.http` 파일을 VSCode REST Client 확장으로 실행하거나, Postman/Insomnia를 사용하세요.
-
-### E2E 테스트 (메인 TMS)
-
-```bash
-cd tms
-npx playwright test
+TMS_v2/
+├── backend/          # Express API 서버
+├── frontend/         # React 프론트엔드
+└── MD/               # 문서들
 ```
 
 ---
 
-## 🤝 기여
+## 문서
 
-이 프로젝트는 개인 프로젝트이지만, 버그 리포트나 기능 제안은 언제나 환영합니다!
+자세한 내용은 아래 문서를 참고하세요:
 
----
-
-## 📞 문제 해결
-
-### 백엔드 서버가 시작되지 않는 경우
-- PostgreSQL 실행 상태 확인
-- `.env` 파일 설정 확인
-- 포트 충돌 확인 (3001)
-
-### 프론트엔드가 백엔드에 연결되지 않는 경우
-- 백엔드 서버 실행 확인
-- CORS 설정 확인
-- Axios baseURL 확인
-
-### 데이터베이스 마이그레이션 오류
-```bash
-cd backend
-npx prisma migrate reset
-npm run prisma:migrate
-```
+* [backend/README.md](./backend/README.md) - API 문서
+* [MD/SETUP_GUIDE.md](./MD/SETUP_GUIDE.md) - 설치 가이드
+* [MD/PROJECT_SUMMARY.md](./MD/PROJECT_SUMMARY.md) - 프로젝트 요약
 
 ---
 
-## 📜 라이선스
+## 라이선스
 
-MIT License
-
----
-
-## 👨‍💻 개발자
-
-**프로젝트 시작**: 2025년 11월
-**개발 환경**: Next.js 14 + Express + React
+MIT License - 자유롭게 사용하고 수정하세요!
 
 ---
 
-## 🎯 로드맵
-
-### 완료 ✅
-- [x] 인증 시스템 구축
-- [x] 권한 관리
-- [x] 사용자 승인 시스템
-- [x] Express 백엔드 분리
-
-### 진행 중 🔄
-- [ ] Refresh Token 구현
-- [ ] 이메일 인증
-- [ ] 비밀번호 찾기
-
-### 계획 📅
-- [ ] 2단계 인증 (2FA)
-- [ ] 감사 로그
-- [ ] 역할 세분화 (QA, Viewer 등)
-
----
-
-**Happy Testing! 🚀**
+**즐거운 테스팅 되세요! 🚀**
 
