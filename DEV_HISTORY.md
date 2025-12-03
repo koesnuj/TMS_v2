@@ -385,6 +385,78 @@ TMS_v2/
   - 선택된 항목 일괄 Priority 변경
   - 선택된 항목 일괄 삭제
 
+---
+
+### Phase 9: Test Cases 페이지 전면 리디자인 및 폴더 관리 강화 (2025-12-03)
+
+#### 완료 작업
+- ✅ **Test Cases 페이지 레이아웃 전면 리디자인**
+  - TestRail 스타일 "섹션 헤더 + 테이블" 구조로 변경
+  - 각 섹션(폴더)별로 테스트케이스 개수 배지 표시
+  - 섹션별 독립적인 정렬 기능 (ID, Title, Priority 클릭 시 오름/내림차순 토글)
+  - 정렬 상태 화살표 아이콘으로 시각화
+- ✅ **테스트케이스 디테일 패널**
+  - 우측 슬라이드 패널로 상세 정보 표시
+  - 패널 열린 상태에서 다른 케이스 선택 시 내용 업데이트
+  - Edit/Delete 버튼 상단 헤더로 이동
+  - 인라인 편집 모드 지원 (Rich Text Editor)
+- ✅ **상위 폴더 케이스 통합 표시**
+  - 상위 폴더 선택 시 하위 폴더의 모든 케이스도 함께 표시
+  - 백엔드 `includeDescendants` 파라미터 추가
+  - 재귀적으로 모든 자손 폴더 ID 수집
+- ✅ **Rich Text Editor 이미지 기능**
+  - 이미지 업로드 버튼 추가 (`@tiptap/extension-image`)
+  - 5MB 용량 제한, JPEG/PNG/GIF/WEBP 지원
+  - 백엔드 이미지 업로드 API (`POST /api/upload/image`)
+  - Multer를 활용한 파일 저장
+- ✅ **이미지 라이트박스**
+  - 첨부된 이미지 클릭 시 팝업으로 확대 보기
+  - 확대/축소 (25%~400%)
+  - 90도 회전 기능
+  - ESC 키 또는 배경 클릭으로 닫기
+  - `ImageLightbox.tsx` 컴포넌트 추가
+- ✅ **폴더 개별 삭제 기능**
+  - 폴더 아이템에 휴지통 아이콘 추가 (hover 시 표시)
+  - 확인 모달 후 삭제
+  - 하위 폴더 및 테스트케이스 연쇄 삭제
+  - `DELETE /api/folders/:id` API 추가
+- ✅ **폴더 Bulk 선택/삭제 기능**
+  - Folders 헤더에 Bulk 모드 토글 버튼 추가
+  - Bulk 모드에서 체크박스로 여러 폴더 선택
+  - 선택된 폴더 수 표시 및 일괄 삭제 버튼
+  - `DELETE /api/folders/bulk` API 추가
+- ✅ **기타 개선**
+  - Expected Result 필드 HTML 태그 제거 (`stripHtmlTags` 함수)
+  - `DOMPurify`로 XSS 공격 방지
+  - 이미지 hover 시 커서 변경 (zoom-in)
+
+#### 백엔드 변경사항
+- 새 API 엔드포인트:
+  - `DELETE /api/folders/:id` - 폴더 개별 삭제 (하위 폴더 및 테스트케이스 포함)
+  - `DELETE /api/folders/bulk` - 폴더 일괄 삭제
+  - `POST /api/upload/image` - 이미지 업로드
+- `GET /api/testcases` - `includeDescendants` 쿼리 파라미터 추가
+- `getAllDescendantIds()` 헬퍼 함수로 재귀적 폴더 ID 수집
+- 정적 파일 서빙: `/uploads/images/` 경로
+
+#### 프론트엔드 변경사항
+- `TestCasesPage.tsx`: 섹션 기반 레이아웃으로 전면 재구현
+  - `SectionHeader` 컴포넌트 (폴더명 + 케이스 수 배지)
+  - `TestCaseRow` 컴포넌트 (체크박스 + ID + Title + Priority + 상세 버튼)
+  - `TestCaseDetailPanel` 컴포넌트 (우측 슬라이드 패널)
+  - 섹션별 정렬 상태 관리 (`SectionSortState`)
+- `FolderTree.tsx`: 삭제 및 Bulk 선택 기능 추가
+  - `onDeleteFolder` prop 추가
+  - `selectedFolderIds`, `onToggleFolderSelect`, `isBulkMode` props 추가
+- `RichTextEditor.tsx`: 이미지 업로드 기능 추가
+- `ImageLightbox.tsx`: 새 컴포넌트 추가
+- `upload.ts`: 이미지 업로드 API 클라이언트 추가
+- `folder.ts`: `deleteFolder()`, `bulkDeleteFolders()` 함수 추가
+
+#### 신규 의존성
+- `@tiptap/extension-image` - Rich Text Editor 이미지 확장
+- `dompurify`, `@types/dompurify` - HTML Sanitization
+
 #### 발생한 문제 및 해결
 
 1. **SQLite autoincrement 제한 문제**
@@ -526,12 +598,18 @@ model PlanItem {
 ### 완성된 기능
 - ✅ 인증 및 권한 관리 (회원가입, 로그인, 관리자 승인)
 - ✅ 테스트 케이스 전체 CRUD (생성, 조회, 수정, 삭제)
-- ✅ 계층형 폴더 구조 (최대 3단계 깊이)
+- ✅ 계층형 폴더 구조 (최대 5단계 깊이)
 - ✅ 폴더 드래그앤드롭 (순서 변경, 부모/자식 관계 변경)
 - ✅ 폴더 이름 변경
-- ✅ **테스트케이스 드래그앤드롭** (순서 변경, 폴더 이동)
-- ✅ **테스트케이스 다중 선택 및 일괄 이동**
-- ✅ **테스트케이스 ID 형식** (OVDR0001, OVDR0002...)
+- ✅ **폴더 삭제** (개별/일괄, 하위 폴더 및 케이스 연쇄 삭제)
+- ✅ 테스트케이스 드래그앤드롭 (순서 변경, 폴더 이동)
+- ✅ 테스트케이스 다중 선택 및 일괄 이동
+- ✅ 테스트케이스 ID 형식 (OVDR0001, OVDR0002...)
+- ✅ **TestRail 스타일 섹션 기반 레이아웃** (섹션 헤더 + 테이블)
+- ✅ **섹션별 정렬 기능** (ID, Title, Priority)
+- ✅ **테스트케이스 디테일 패널** (우측 슬라이드)
+- ✅ **Rich Text Editor 이미지 첨부** (업로드 + 라이트박스)
+- ✅ **상위 폴더 선택 시 하위 케이스 통합 표시**
 - ✅ CSV Import/Export
 - ✅ 테스트 플랜 생성 및 관리
 - ✅ 테스트 실행 및 결과 기록 (5가지 상태)
@@ -559,9 +637,9 @@ model PlanItem {
    - ~~Drag & Drop으로 순서 조정~~
    - ~~`sequence` 필드 활용~~
    - ~~폴더로 드래그앤드롭 이동~~
-3. **이미지 첨부 기능**
-   - 스크린샷 첨부 지원
-   - 클라우드 스토리지 연동 고려
+3. ~~**이미지 첨부 기능**~~ → **완료 (Phase 9)**
+   - ~~Rich Text Editor에 이미지 업로드~~
+   - ~~이미지 라이트박스 (확대/회전)~~
 
 ### 중기 계획
 1. **알림 시스템**
@@ -771,5 +849,5 @@ MIT License - 자유롭게 사용하고 수정하세요!
 
 **즐거운 테스팅 되세요! 🚀**
 
-마지막 업데이트: 2025-12-03 (Phase 8 완료)
+마지막 업데이트: 2025-12-03 (Phase 9 완료)
 
