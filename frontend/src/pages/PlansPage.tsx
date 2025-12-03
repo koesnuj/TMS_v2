@@ -2,27 +2,24 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getPlans, 
-  archivePlan, 
-  unarchivePlan, 
-  deletePlan, 
   bulkArchivePlans, 
   bulkUnarchivePlans, 
   bulkDeletePlans,
   Plan, 
   PlanStatusFilter 
 } from '../api/plan';
-import { Plus, PlayCircle, FileText, Archive, RotateCcw, Trash2, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, PlayCircle, FileText, ChevronLeft, ChevronRight, Archive, RotateCcw, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Badge } from '../components/ui/Badge';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 type FilterOption = { value: PlanStatusFilter; label: string };
 
 const FILTER_OPTIONS: FilterOption[] = [
-  { value: 'ALL', label: 'All Plans' },
-  { value: 'ACTIVE', label: 'Active Only' },
-  { value: 'ARCHIVED', label: 'Archived Only' },
+  { value: 'ALL', label: '전체' },
+  { value: 'ACTIVE', label: '활성' },
+  { value: 'ARCHIVED', label: '아카이브' },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -31,19 +28,13 @@ const PlansPage: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<PlanStatusFilter>('ALL');
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // 페이지네이션 상태
   const [activePage, setActivePage] = useState(1);
   const [archivedPage, setArchivedPage] = useState(1);
-  
-  // 모달 상태
-  const [archiveModal, setArchiveModal] = useState<{ isOpen: boolean; plan: Plan | null }>({ isOpen: false, plan: null });
-  const [unarchiveModal, setUnarchiveModal] = useState<{ isOpen: boolean; plan: Plan | null }>({ isOpen: false, plan: null });
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; plan: Plan | null }>({ isOpen: false, plan: null });
-  
-  // 일괄 처리 모달 상태
+
+  // Bulk 액션 모달 상태
   const [bulkArchiveModal, setBulkArchiveModal] = useState(false);
   const [bulkUnarchiveModal, setBulkUnarchiveModal] = useState(false);
   const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
@@ -60,17 +51,6 @@ const PlansPage: React.FC = () => {
     setActivePage(1);
     setArchivedPage(1);
   }, [statusFilter]);
-
-  // 메뉴 외부 클릭 시 닫기
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (openMenuId && !(e.target as Element).closest('.action-menu')) {
-        setOpenMenuId(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [openMenuId]);
 
   const loadPlans = async () => {
     try {
@@ -104,6 +84,11 @@ const PlansPage: React.FC = () => {
   const totalActivePages = Math.ceil(activePlans.length / ITEMS_PER_PAGE);
   const totalArchivedPages = Math.ceil(archivedPlans.length / ITEMS_PER_PAGE);
 
+  // 선택된 플랜들의 상태 분석
+  const selectedPlans = plans.filter(p => selectedIds.has(p.id));
+  const hasActiveSelected = selectedPlans.some(p => p.status === 'ACTIVE');
+  const hasArchivedSelected = selectedPlans.some(p => p.status === 'ARCHIVED');
+
   // 체크박스 핸들러
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>, sectionPlans: Plan[]) => {
     e.stopPropagation();
@@ -130,51 +115,7 @@ const PlansPage: React.FC = () => {
     setSelectedIds(newSelected);
   };
 
-  // 선택된 플랜들의 상태 분석
-  const selectedPlans = plans.filter(p => selectedIds.has(p.id));
-  const hasActiveSelected = selectedPlans.some(p => p.status === 'ACTIVE');
-  const hasArchivedSelected = selectedPlans.some(p => p.status === 'ARCHIVED');
-
-  const handleArchive = async () => {
-    if (!archiveModal.plan) return;
-    try {
-      const response = await archivePlan(archiveModal.plan.id);
-      if (response.success) {
-        loadPlans();
-      }
-    } catch (error) {
-      console.error('Failed to archive plan', error);
-    }
-    setArchiveModal({ isOpen: false, plan: null });
-  };
-
-  const handleUnarchive = async () => {
-    if (!unarchiveModal.plan) return;
-    try {
-      const response = await unarchivePlan(unarchiveModal.plan.id);
-      if (response.success) {
-        loadPlans();
-      }
-    } catch (error) {
-      console.error('Failed to unarchive plan', error);
-    }
-    setUnarchiveModal({ isOpen: false, plan: null });
-  };
-
-  const handleDelete = async () => {
-    if (!deleteModal.plan) return;
-    try {
-      const response = await deletePlan(deleteModal.plan.id);
-      if (response.success) {
-        loadPlans();
-      }
-    } catch (error) {
-      console.error('Failed to delete plan', error);
-    }
-    setDeleteModal({ isOpen: false, plan: null });
-  };
-
-  // 일괄 처리 핸들러
+  // Bulk 액션 핸들러
   const handleBulkArchive = async () => {
     const activeIds = selectedPlans.filter(p => p.status === 'ACTIVE').map(p => p.id);
     if (activeIds.length === 0) return;
@@ -222,19 +163,14 @@ const PlansPage: React.FC = () => {
     setBulkDeleteModal(false);
   };
 
-  const toggleMenu = (e: React.MouseEvent, planId: string) => {
-    e.stopPropagation();
-    setOpenMenuId(openMenuId === planId ? null : planId);
-  };
-
   const getEmptyMessage = () => {
     switch (statusFilter) {
       case 'ARCHIVED':
-        return { title: 'No archived test plans', description: 'Archived plans will appear here.' };
+        return { title: '아카이브된 플랜이 없습니다', description: '아카이브된 플랜이 여기에 표시됩니다.' };
       case 'ALL':
-        return { title: 'No test plans', description: 'Create a test plan to start executing test cases.' };
+        return { title: '테스트 플랜이 없습니다', description: '테스트 플랜을 생성하여 테스트 실행을 시작하세요.' };
       default:
-        return { title: 'No active test plans', description: 'Create a test plan to start executing test cases.' };
+        return { title: '활성 플랜이 없습니다', description: '테스트 플랜을 생성하여 테스트 실행을 시작하세요.' };
     }
   };
 
@@ -278,11 +214,7 @@ const PlansPage: React.FC = () => {
   };
 
   // 플랜 테이블 렌더링
-  const renderPlanTable = (
-    sectionPlans: Plan[], 
-    allSectionPlans: Plan[],
-    showCheckboxHeader: boolean = true
-  ) => {
+  const renderPlanTable = (sectionPlans: Plan[], allSectionPlans: Plan[]) => {
     const allSelected = sectionPlans.length > 0 && sectionPlans.every(p => selectedIds.has(p.id));
     const someSelected = sectionPlans.some(p => selectedIds.has(p.id));
 
@@ -291,25 +223,23 @@ const PlansPage: React.FC = () => {
         <thead className="bg-slate-50">
           <tr>
             <th className="px-4 py-3 text-left w-10">
-              {showCheckboxHeader && (
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={input => {
-                    if (input) {
-                      input.indeterminate = someSelected && !allSelected;
-                    }
-                  }}
-                  onChange={(e) => handleSelectAll(e, sectionPlans)}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                />
-              )}
+              <input
+                type="checkbox"
+                checked={allSelected}
+                ref={input => {
+                  if (input) {
+                    input.indeterminate = someSelected && !allSelected;
+                  }
+                }}
+                onChange={(e) => handleSelectAll(e, sectionPlans)}
+                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-2/5">Name</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Stats</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
-            <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider w-16">Actions</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-2/5">이름</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">진행률</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">통계</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">생성일</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">상태</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-slate-200">
@@ -337,7 +267,7 @@ const PlansPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs text-slate-500 line-clamp-1">
-                      {plan.description || 'No description provided.'}
+                      {plan.description || '설명 없음'}
                     </div>
                   </div>
                 </div>
@@ -359,15 +289,15 @@ const PlansPage: React.FC = () => {
               </td>
               <td className="px-4 py-4">
                 <div className="flex gap-4 text-xs text-slate-600">
-                  <div className="flex items-center gap-1" title="Passed">
+                  <div className="flex items-center gap-1" title="통과">
                     <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                     <span className="font-medium">{plan.stats?.pass}</span>
                   </div>
-                  <div className="flex items-center gap-1" title="Failed">
+                  <div className="flex items-center gap-1" title="실패">
                     <div className="w-2 h-2 rounded-full bg-rose-500"></div>
                     <span className="font-medium">{plan.stats?.fail}</span>
                   </div>
-                  <div className="flex items-center gap-1" title="Untested">
+                  <div className="flex items-center gap-1" title="미실행">
                     <div className="w-2 h-2 rounded-full bg-slate-300"></div>
                     <span className="font-medium">{plan.stats?.notRun}</span>
                   </div>
@@ -376,59 +306,13 @@ const PlansPage: React.FC = () => {
               <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">
                 <div className="flex flex-col">
                   <span>{new Date(plan.createdAt).toLocaleDateString()}</span>
-                  <span className="text-xs text-slate-400">by {plan.createdBy}</span>
+                  <span className="text-xs text-slate-400">{plan.createdBy}</span>
                 </div>
               </td>
-              <td className="px-4 py-4 text-right">
-                <div className="relative action-menu">
-                  <button
-                    onClick={(e) => toggleMenu(e, plan.id)}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    <MoreVertical size={16} className="text-slate-500" />
-                  </button>
-                  
-                  {openMenuId === plan.id && (
-                    <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10">
-                      {plan.status === 'ACTIVE' ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(null);
-                            setArchiveModal({ isOpen: true, plan });
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                          <Archive size={14} />
-                          Archive
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(null);
-                            setUnarchiveModal({ isOpen: true, plan });
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                          <RotateCcw size={14} />
-                          Restore
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          setDeleteModal({ isOpen: true, plan });
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <Trash2 size={14} />
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <td className="px-4 py-4 whitespace-nowrap">
+                <Badge variant={plan.status === 'ACTIVE' ? 'success' : 'secondary'} size="sm">
+                  {plan.status === 'ACTIVE' ? '활성' : '아카이브'}
+                </Badge>
               </td>
             </tr>
           ))}
@@ -450,7 +334,7 @@ const PlansPage: React.FC = () => {
               onClick={() => navigate('/plans/create')}
               icon={<Plus size={16} />}
             >
-              Create Plan
+              플랜 생성
             </Button>
           </div>
         </Card>
@@ -462,12 +346,12 @@ const PlansPage: React.FC = () => {
         {/* Active Plans Section */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-lg font-semibold text-slate-900">Active Plans</h2>
+            <h2 className="text-lg font-semibold text-slate-900">활성 플랜</h2>
             <Badge variant="primary" size="sm">{activePlans.length}</Badge>
           </div>
           {activePlans.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-slate-500">No active plans</p>
+              <p className="text-slate-500">활성 플랜이 없습니다</p>
             </Card>
           ) : (
             <Card noPadding>
@@ -484,12 +368,12 @@ const PlansPage: React.FC = () => {
         {/* Archived Plans Section */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-lg font-semibold text-slate-500">Archived Plans</h2>
+            <h2 className="text-lg font-semibold text-slate-500">아카이브된 플랜</h2>
             <Badge variant="secondary" size="sm">{archivedPlans.length}</Badge>
           </div>
           {archivedPlans.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-slate-500">No archived plans</p>
+              <p className="text-slate-500">아카이브된 플랜이 없습니다</p>
             </Card>
           ) : (
             <Card noPadding>
@@ -526,7 +410,7 @@ const PlansPage: React.FC = () => {
                 onClick={() => navigate('/plans/create')}
                 icon={<Plus size={16} />}
               >
-                Create Plan
+                플랜 생성
               </Button>
             </div>
           )}
@@ -551,21 +435,21 @@ const PlansPage: React.FC = () => {
       {/* Header Section */}
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Test Plans & Runs</h1>
-          <p className="text-slate-500 mt-1">Manage your test execution cycles.</p>
+          <h1 className="text-2xl font-bold text-slate-900">테스트 플랜</h1>
+          <p className="text-slate-500 mt-1">테스트 실행 주기를 관리하세요.</p>
         </div>
         <Button
           onClick={() => navigate('/plans/create')}
           icon={<Plus size={16} />}
         >
-          Add Test Plan
+          플랜 생성
         </Button>
       </div>
 
       {/* Filter & Bulk Actions Section */}
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">Show:</span>
+        <div className="flex items-center">
+          <span className="text-sm text-slate-600 mr-2">필터:</span>
           <div className="flex bg-slate-100 rounded-lg p-1">
             {FILTER_OPTIONS.map((option) => (
               <button
@@ -596,7 +480,7 @@ const PlansPage: React.FC = () => {
                 icon={<Archive size={14} />}
                 onClick={() => setBulkArchiveModal(true)}
               >
-                Archive
+                아카이브
               </Button>
             )}
             {hasArchivedSelected && (
@@ -606,7 +490,7 @@ const PlansPage: React.FC = () => {
                 icon={<RotateCcw size={14} />}
                 onClick={() => setBulkUnarchiveModal(true)}
               >
-                Restore
+                복원
               </Button>
             )}
             <Button
@@ -615,7 +499,7 @@ const PlansPage: React.FC = () => {
               icon={<Trash2 size={14} />}
               onClick={() => setBulkDeleteModal(true)}
             >
-              Delete
+              삭제
             </Button>
           </div>
         )}
@@ -623,48 +507,12 @@ const PlansPage: React.FC = () => {
 
       {/* Content Section */}
       {isLoading ? (
-        <div className="flex justify-center items-center h-64 text-slate-500">Loading...</div>
+        <div className="flex justify-center items-center h-64 text-slate-500">로딩 중...</div>
       ) : statusFilter === 'ALL' ? (
         renderAllPlansView()
       ) : (
         renderSingleSectionView()
       )}
-
-      {/* Archive Confirm Modal */}
-      <ConfirmModal
-        isOpen={archiveModal.isOpen}
-        onClose={() => setArchiveModal({ isOpen: false, plan: null })}
-        onConfirm={handleArchive}
-        title="테스트 플랜 아카이브"
-        message="이 테스트 플랜을 아카이브 하시겠습니까? 실행 중인 테스트 런에는 영향이 없습니다."
-        confirmText="Archive"
-        cancelText="Cancel"
-        variant="warning"
-      />
-
-      {/* Unarchive Confirm Modal */}
-      <ConfirmModal
-        isOpen={unarchiveModal.isOpen}
-        onClose={() => setUnarchiveModal({ isOpen: false, plan: null })}
-        onConfirm={handleUnarchive}
-        title="테스트 플랜 복원"
-        message="이 테스트 플랜을 다시 활성 상태로 복원하시겠습니까?"
-        confirmText="Restore"
-        cancelText="Cancel"
-        variant="info"
-      />
-
-      {/* Delete Confirm Modal */}
-      <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, plan: null })}
-        onConfirm={handleDelete}
-        title="테스트 플랜 삭제"
-        message="이 테스트 플랜을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 테스트 실행 기록이 함께 삭제됩니다."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
 
       {/* Bulk Archive Confirm Modal */}
       <ConfirmModal
@@ -672,9 +520,9 @@ const PlansPage: React.FC = () => {
         onClose={() => setBulkArchiveModal(false)}
         onConfirm={handleBulkArchive}
         title="테스트 플랜 일괄 아카이브"
-        message={`선택한 ${selectedPlans.filter(p => p.status === 'ACTIVE').length}개의 테스트 플랜을 아카이브 하시겠습니까? 실행 중인 테스트 런에는 영향이 없습니다.`}
-        confirmText="Archive"
-        cancelText="Cancel"
+        message={`선택한 ${selectedPlans.filter(p => p.status === 'ACTIVE').length}개의 활성 플랜을 아카이브 하시겠습니까?`}
+        confirmText="아카이브"
+        cancelText="취소"
         variant="warning"
       />
 
@@ -684,9 +532,9 @@ const PlansPage: React.FC = () => {
         onClose={() => setBulkUnarchiveModal(false)}
         onConfirm={handleBulkUnarchive}
         title="테스트 플랜 일괄 복원"
-        message={`선택한 ${selectedPlans.filter(p => p.status === 'ARCHIVED').length}개의 테스트 플랜을 다시 활성 상태로 복원하시겠습니까?`}
-        confirmText="Restore"
-        cancelText="Cancel"
+        message={`선택한 ${selectedPlans.filter(p => p.status === 'ARCHIVED').length}개의 아카이브된 플랜을 복원하시겠습니까?`}
+        confirmText="복원"
+        cancelText="취소"
         variant="info"
       />
 
@@ -696,9 +544,9 @@ const PlansPage: React.FC = () => {
         onClose={() => setBulkDeleteModal(false)}
         onConfirm={handleBulkDelete}
         title="테스트 플랜 일괄 삭제"
-        message={`선택한 ${selectedIds.size}개의 테스트 플랜을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 테스트 실행 기록이 함께 삭제됩니다.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        message={`선택한 ${selectedIds.size}개의 플랜을 삭제하시겠습니까? 모든 테스트 실행 기록이 함께 삭제되며, 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="삭제"
+        cancelText="취소"
         variant="danger"
       />
     </div>

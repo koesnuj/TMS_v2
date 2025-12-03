@@ -11,7 +11,7 @@ import SettingsPage from './pages/SettingsPage';
 import TestCasesPage from './pages/TestCasesPage';
 import PlansPage from './pages/PlansPage';
 import CreatePlanPage from './pages/CreatePlanPage';
-import PlanDetailPage from './pages/PlanDetailPage3Column';
+import PlanDetailPage from './pages/PlanDetailPage';
 
 function App() {
   return (

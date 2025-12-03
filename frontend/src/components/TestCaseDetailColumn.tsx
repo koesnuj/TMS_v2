@@ -113,21 +113,21 @@ export const TestCaseDetailColumn: React.FC<TestCaseDetailColumnProps> = ({
   };
 
   return (
-    <div className="w-[420px] h-full bg-white border-l border-slate-200 flex-shrink-0 flex flex-col overflow-hidden">
+    <div className="w-full h-full bg-white flex flex-col overflow-hidden">
       {/* Header - Fixed */}
-      <div className="bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between flex-shrink-0">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Test Case Details</h3>
+      <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">케이스 상세</h3>
         <button
           onClick={onClose}
-          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-          title="Close (ESC)"
+          className="p-1 hover:bg-slate-200 rounded transition-colors"
+          title="닫기 (ESC)"
         >
-          <X size={18} className="text-slate-500" />
+          <X size={14} className="text-slate-400" />
         </button>
       </div>
 
       {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {/* ID & Priority */}
         <div>
           <div className="flex items-center gap-2 mb-2">

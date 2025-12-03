@@ -107,7 +107,13 @@ export async function getPlanDetail(req: Request, res: Response): Promise<void> 
       include: {
         items: {
           include: {
-            testCase: true
+            testCase: {
+              include: {
+                folder: {
+                  select: { id: true, name: true, parentId: true }
+                }
+              }
+            }
           },
           // 정렬: PlanItem의 order 순, 없으면 테스트케이스의 sequence 순
           orderBy: [{ order: 'asc' }, { testCase: { sequence: 'asc' } }]
@@ -223,6 +229,94 @@ export async function bulkUpdatePlanItems(req: Request, res: Response): Promise<
   } catch (error) {
     console.error('Bulk update plan items error:', error);
     res.status(500).json({ success: false, message: '일괄 업데이트 중 오류가 발생했습니다.' });
+  }
+}
+
+// 플랜 업데이트 (이름, 설명, 테스트케이스 목록)
+export async function updatePlan(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { planId } = req.params;
+    const { name, description, testCaseIds } = req.body;
+
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+      include: { items: true }
+    });
+
+    if (!plan) {
+      res.status(404).json({ success: false, message: '플랜을 찾을 수 없습니다.' });
+      return;
+    }
+
+    // 트랜잭션으로 업데이트
+    const updatedPlan = await prisma.$transaction(async (tx) => {
+      // 1. Plan 기본 정보 업데이트
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+
+      const updated = await tx.plan.update({
+        where: { id: planId },
+        data: updateData
+      });
+
+      // 2. 테스트케이스 목록 업데이트 (제공된 경우)
+      if (testCaseIds && Array.isArray(testCaseIds)) {
+        const currentItems = plan.items;
+        const currentTestCaseIds = currentItems.map(item => item.testCaseId);
+
+        // 추가할 테스트케이스 (새로 선택된 것)
+        const toAdd = testCaseIds.filter((id: string) => !currentTestCaseIds.includes(id));
+        
+        // 제거할 PlanItem (선택 해제된 것)
+        const toRemove = currentItems.filter(item => !testCaseIds.includes(item.testCaseId));
+
+        // 제거
+        if (toRemove.length > 0) {
+          await tx.planItem.deleteMany({
+            where: {
+              id: { in: toRemove.map(item => item.id) }
+            }
+          });
+        }
+
+        // 추가
+        if (toAdd.length > 0) {
+          const maxOrder = currentItems.length > 0 
+            ? Math.max(...currentItems.map(item => item.order || 0)) 
+            : 0;
+
+          const newItems = toAdd.map((tcId: string, index: number) => ({
+            planId: planId,
+            testCaseId: tcId,
+            result: 'NOT_RUN',
+            order: maxOrder + index + 1
+          }));
+
+          await tx.planItem.createMany({
+            data: newItems
+          });
+        }
+      }
+
+      return updated;
+    });
+
+    // 업데이트된 플랜 상세 정보 반환
+    const result = await prisma.plan.findUnique({
+      where: { id: planId },
+      include: {
+        items: {
+          include: { testCase: true },
+          orderBy: [{ order: 'asc' }]
+        }
+      }
+    });
+
+    res.json({ success: true, data: result, message: '플랜이 업데이트되었습니다.' });
+  } catch (error) {
+    console.error('Update plan error:', error);
+    res.status(500).json({ success: false, message: '플랜 업데이트 중 오류가 발생했습니다.' });
   }
 }
 

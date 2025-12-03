@@ -3,7 +3,8 @@ import { authenticateToken } from '../middleware/auth';
 import { 
   createPlan, 
   getPlans, 
-  getPlanDetail, 
+  getPlanDetail,
+  updatePlan,
   updatePlanItem, 
   bulkUpdatePlanItems,
   archivePlan,
@@ -25,6 +26,7 @@ router.patch('/bulk/unarchive', authenticateToken, bulkUnarchivePlans);
 router.delete('/bulk', authenticateToken, bulkDeletePlans);
 
 router.get('/:planId', authenticateToken, getPlanDetail);
+router.patch('/:planId', authenticateToken, updatePlan);
 router.delete('/:planId', authenticateToken, deletePlan);
 
 // Plan status updates
