@@ -101,34 +101,34 @@ const CreatePlanPage: React.FC = () => {
           onClick={() => navigate('/plans')}
           className="flex items-center text-slate-600 hover:text-slate-900 mb-4 transition-colors"
         >
-          <ArrowLeft size={20} className="mr-2" /> Back to Plans
+          <ArrowLeft size={20} className="mr-2" /> 플랜 목록으로 돌아가기
         </button>
-        <h1 className="text-2xl font-bold text-slate-900">Create New Test Plan</h1>
-        <p className="text-slate-500 mt-1">Select test cases and configure execution details.</p>
+        <h1 className="text-2xl font-bold text-slate-900">새 테스트 플랜 생성</h1>
+        <p className="text-slate-500 mt-1">테스트케이스를 선택하고 실행 세부 정보를 설정하세요.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <Card title="Basic Information">
+        <Card title="기본 정보">
           <div className="space-y-4">
             <Input
-              label="Plan Name"
+              label="플랜 이름"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., 2024 Q1 Release Testing"
+              placeholder="예: 2024년 1분기 릴리스 테스트"
               required
             />
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Description (Optional)
+                설명 (선택사항)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 rows={3}
-                placeholder="Enter test plan description..."
+                placeholder="테스트 플랜에 대한 설명을 입력하세요..."
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ const CreatePlanPage: React.FC = () => {
 
         {/* Test Case Selection */}
         <Card 
-          title={`Select Test Cases (${selectedIds.size} selected)`}
+          title={`테스트케이스 선택 (${selectedIds.size}개 선택됨)`}
           action={
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
@@ -144,7 +144,7 @@ const CreatePlanPage: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title..."
+                placeholder="제목으로 검색..."
                 className="pl-10 pr-4 py-1.5 border border-slate-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -159,12 +159,12 @@ const CreatePlanPage: React.FC = () => {
                 onChange={handleSelectAll}
                 className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mr-3 h-4 w-4"
               />
-              <span className="text-sm font-semibold text-slate-700">Select All</span>
+              <span className="text-sm font-semibold text-slate-700">전체 선택</span>
             </div>
           </div>
           <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
             {filteredCases.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">No test cases found.</div>
+              <div className="p-12 text-center text-slate-500">테스트케이스가 없습니다.</div>
             ) : (
               filteredCases.map((tc) => (
                 <div 
@@ -206,7 +206,7 @@ const CreatePlanPage: React.FC = () => {
             variant="outline"
             onClick={() => navigate('/plans')}
           >
-            Cancel
+            취소
           </Button>
           <Button
             type="submit"
@@ -214,7 +214,7 @@ const CreatePlanPage: React.FC = () => {
             disabled={isSubmitting || selectedIds.size === 0}
             isLoading={isSubmitting}
           >
-            {isSubmitting ? 'Creating...' : 'Create Plan'}
+            {isSubmitting ? '생성 중...' : '플랜 생성'}
           </Button>
         </div>
       </form>
