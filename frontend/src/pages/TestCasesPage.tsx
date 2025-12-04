@@ -4,7 +4,7 @@ import { CsvImportModal } from '../components/CsvImportModal';
 import { TestCaseFormModal } from '../components/TestCaseFormModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { getFolderTree, createFolder, renameFolder, deleteFolder, bulkDeleteFolders, FolderTreeItem } from '../api/folder';
-import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases } from '../api/testcase';
+import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases, AutomationType } from '../api/testcase';
 import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -36,13 +36,31 @@ interface BulkEditModalProps {
   isOpen: boolean;
   selectedCount: number;
   onClose: () => void;
-  onApply: (priority: 'LOW' | 'MEDIUM' | 'HIGH') => void;
+  onApply: (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType }) => void;
 }
 
 const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, onClose, onApply }) => {
-  const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
+  const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | ''>('');
+  const [automationType, setAutomationType] = useState<AutomationType | ''>('');
+
+  // 모달이 열릴 때 선택 상태 초기화
+  useEffect(() => {
+    if (isOpen) {
+      setPriority('');
+      setAutomationType('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleApply = () => {
+    const updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType } = {};
+    if (priority) updates.priority = priority;
+    if (automationType) updates.automationType = automationType;
+    onApply(updates);
+  };
+
+  const hasChanges = priority !== '' || automationType !== '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -55,27 +73,45 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, on
         </div>
         
         <p className="text-sm text-slate-600 mb-4">
-          선택된 <span className="font-semibold text-indigo-600">{selectedCount}개</span> 테스트케이스의 Priority를 변경합니다.
+          선택된 <span className="font-semibold text-indigo-600">{selectedCount}개</span> 테스트케이스를 수정합니다.
+          <br />
+          <span className="text-xs text-slate-500">변경할 항목만 선택하세요. 선택하지 않은 항목은 유지됩니다.</span>
         </p>
         
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH')}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="HIGH">HIGH</option>
-          </select>
+        <div className="space-y-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | '')}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">-- 변경 안함 --</option>
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Automation Type</label>
+            <select
+              value={automationType}
+              onChange={(e) => setAutomationType(e.target.value as AutomationType | '')}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">-- 변경 안함 --</option>
+              <option value="MANUAL">Manual</option>
+              <option value="AUTOMATED">Automated</option>
+            </select>
+          </div>
         </div>
         
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={onClose}>
             취소
           </Button>
-          <Button variant="primary" onClick={() => onApply(priority)}>
+          <Button variant="primary" onClick={handleApply} disabled={!hasChanges}>
             적용
           </Button>
         </div>
@@ -1033,9 +1069,9 @@ const TestCasesPage: React.FC = () => {
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditApply = async (priority: 'LOW' | 'MEDIUM' | 'HIGH') => {
+  const handleBulkEditApply = async (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType }) => {
     try {
-      await bulkUpdateTestCases(Array.from(selectedIds), priority);
+      await bulkUpdateTestCases(Array.from(selectedIds), updates);
       setIsBulkEditModalOpen(false);
       setSelectedIds(new Set());
       loadTestCases(selectedFolderId);

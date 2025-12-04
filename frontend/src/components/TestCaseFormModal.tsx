@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { RichTextEditor } from './RichTextEditor';
-import { createTestCase, updateTestCase, TestCase } from '../api/testcase';
+import { createTestCase, updateTestCase, TestCase, AutomationType } from '../api/testcase';
 
 interface TestCaseFormModalProps {
   isOpen: boolean;
@@ -25,6 +25,7 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
   const [steps, setSteps] = useState('');
   const [expectedResult, setExpectedResult] = useState('');
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
+  const [automationType, setAutomationType] = useState<AutomationType>('MANUAL');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,12 +39,14 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         setSteps(initialData.steps || '');
         setExpectedResult(initialData.expectedResult || '');
         setPriority(initialData.priority || 'MEDIUM');
+        setAutomationType(initialData.automationType || 'MANUAL');
       } else {
         setTitle('');
         setPrecondition('');
         setSteps('');
         setExpectedResult('');
         setPriority('MEDIUM');
+        setAutomationType('MANUAL');
       }
       setError('');
     }
@@ -96,6 +99,7 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         steps,
         expectedResult,
         priority,
+        automationType,
         ...(folderId ? { folderId } : {}),
       };
 
@@ -168,21 +172,37 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
             />
           </div>
 
-          {/* Priority */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Priority
-            </label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH')}
-              disabled={isSubmitting}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
-            >
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
+          {/* Priority & Automation Type */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Priority
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH')}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Automation Type
+              </label>
+              <select
+                value={automationType}
+                onChange={(e) => setAutomationType(e.target.value as AutomationType)}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
+              >
+                <option value="MANUAL">Manual</option>
+                <option value="AUTOMATED">Automated</option>
+              </select>
+            </div>
           </div>
 
           {/* Preconditions */}

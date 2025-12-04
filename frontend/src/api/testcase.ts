@@ -1,5 +1,7 @@
 import api from './axios';
 
+export type AutomationType = 'MANUAL' | 'AUTOMATED';
+
 export interface TestCase {
   id: string;
   caseNumber?: number; // OVDR 형식 ID용 자동 증가 번호
@@ -9,6 +11,7 @@ export interface TestCase {
   steps?: string;
   expectedResult?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  automationType: AutomationType;
   sequence: number;
   folderId?: string;
   folder?: { id: string; name: string; parentId?: string | null }; // 폴더 정보
@@ -63,10 +66,13 @@ export const reorderTestCases = async (orderedIds: string[], folderId?: string) 
 };
 
 // 테스트케이스 일괄 수정
-export const bulkUpdateTestCases = async (ids: string[], priority: 'LOW' | 'MEDIUM' | 'HIGH') => {
+export const bulkUpdateTestCases = async (
+  ids: string[], 
+  updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType }
+) => {
   const response = await api.patch<{ success: boolean; data: { count: number; message: string } }>(
     '/testcases/bulk',
-    { ids, priority }
+    { ids, ...updates }
   );
   return response.data;
 };
