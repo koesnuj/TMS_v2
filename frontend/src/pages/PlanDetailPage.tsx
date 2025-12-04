@@ -837,8 +837,8 @@ const PlanDetailPage: React.FC = () => {
                 <col className="w-10" />           {/* Checkbox */}
                 <col className="w-16" />           {/* ID */}
                 <col />                            {/* Title (auto) */}
-                <col className="w-[72px]" />       {/* PRI */}
-                <col className="w-[72px]" />       {/* TYPE */}
+                <col className="w-[80px]" />       {/* PRI - HIGH/MEDIUM/LOW */}
+                <col className="w-[80px]" />       {/* TYPE - Auto/Manual */}
                 <col className="w-[88px]" />       {/* CATEGORY */}
                 <col className="w-[88px]" />       {/* ASSIGNEE */}
                 <col className="w-[100px]" />      {/* RESULT */}
@@ -896,20 +896,20 @@ const PlanDetailPage: React.FC = () => {
                     </td>
                     <td className="px-2 py-2 text-center align-middle">
                       <div className="flex items-center justify-center">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                           item.testCase.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
                           item.testCase.priority === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {item.testCase.priority.charAt(0)}
+                          {item.testCase.priority}
                         </span>
                       </div>
                     </td>
                     <td className="px-2 py-2 text-center align-middle">
                       <div className="flex items-center justify-center">
-                        <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${
+                        <span className={`text-[9px] font-medium px-2 py-0.5 rounded ${
                           item.testCase.automationType === 'AUTOMATED' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
                         }`}>
-                          {item.testCase.automationType === 'AUTOMATED' ? 'Auto' : 'Man'}
+                          {item.testCase.automationType === 'AUTOMATED' ? 'Auto' : 'Manual'}
                         </span>
                       </div>
                     </td>
