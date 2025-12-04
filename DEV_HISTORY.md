@@ -640,6 +640,179 @@ TMS_v2/
 
 ---
 
+### Phase 8: TestCase 필드 확장 및 필터/그룹핑 기능 (2025-12-04)
+
+#### 8-1. automationType 필드 추가
+
+##### 완료 작업
+- ✅ **TestCase에 automationType 필드 추가**
+  - 값: `MANUAL` / `AUTOMATED`
+  - 기본값: `MANUAL`
+  - UI 라벨: "Manual" / "Automated"
+- ✅ **테이블 UI에 Type 컬럼 추가**
+  - Priority 옆에 Type 컬럼 표시
+  - `AUTOMATED`는 보라색 배지, `MANUAL`은 회색 배지
+- ✅ **디테일 패널에 Type 표시**
+  - 헤더에 배지로 표시
+  - Edit 모드에서 수정 가능
+- ✅ **TestCaseFormModal에 automationType 선택 추가**
+  - Priority와 나란히 드롭다운으로 표시
+- ✅ **BulkEditModal에 automationType 일괄 수정 추가**
+- ✅ **CSV Import에 automationType 매핑 지원**
+  - 키워드: automation, type, automated, manual, 자동화 등
+
+##### 백엔드 변경사항
+- Prisma 스키마: `TestCase` 모델에 `automationType String @default("MANUAL")` 추가
+- `createTestCase`: automationType 처리 추가
+- `updateTestCase`: automationType 수정 지원
+- `bulkUpdateTestCases`: automationType 일괄 수정 지원
+- `importTestCases`: CSV Import 시 automationType 매핑
+
+##### 프론트엔드 변경사항
+- `testcase.ts`: `AutomationType` 타입 및 `automationType` 필드 추가
+- `TestCasesPage.tsx`: 테이블 헤더/행에 Type 컬럼 추가
+- `TestCaseFormModal.tsx`: automationType 선택 드롭다운 추가
+- `BulkEditModal`: automationType 일괄 수정 옵션 추가
+- `CsvImportModal.tsx`: automationType 필드 매핑 지원
+
+---
+
+#### 8-2. 계층적 체크박스 선택 기능
+
+##### 완료 작업
+- ✅ **상위 폴더 체크박스 선택 시 하위 항목 일괄 선택**
+  - 폴더(섹션) 체크박스 클릭 시 해당 폴더 및 모든 하위 폴더의 테스트케이스 선택
+  - 체크 해제 시 하위 항목들도 모두 해제
+- ✅ **재귀적 ID 수집 함수 구현**
+  - `getAllTestCaseIdsInSectionAndDescendants()`: 섹션 및 하위 섹션의 모든 테스트케이스 ID 수집
+  - `isSectionFullySelected()`: 섹션의 모든 항목이 선택되었는지 확인
+
+##### 프론트엔드 변경사항
+- `TestCasesPage.tsx`:
+  - `getAllTestCaseIdsInSectionAndDescendants()` 헬퍼 함수 추가
+  - `isSectionFullySelected()` 헬퍼 함수 추가
+  - `handleSelectAllInSection()` 함수 개선
+
+---
+
+#### 8-3. Test Case Export 기능
+
+##### 완료 작업
+- ✅ **Export 드롭다운 버튼 추가**
+  - 툴바에 "Export" 버튼 추가
+  - 드롭다운 메뉴로 옵션 선택
+- ✅ **Export 대상 모드 3가지 지원**
+  1. All filtered cases: 현재 필터/검색 조건이 적용된 전체 케이스
+  2. Selected cases only: 체크박스로 선택된 케이스만 (선택된 게 없으면 비활성화)
+  3. Current folder's cases: 현재 선택된 폴더 하위의 모든 케이스
+- ✅ **파일 포맷 지원**
+  - CSV: BOM 포함 (한글 깨짐 방지)
+  - Excel (XLSX): 컬럼 너비 자동 설정
+- ✅ **Export 컬럼**
+  - ID, Title, Priority, Automation Type, Folder Path
+  - Preconditions, Steps, Expected Result (HTML → Plain Text 변환)
+  - Created By, Created At, Updated At
+- ✅ **Rich Text 변환**
+  - HTML 태그 제거 (`stripHtmlToText` 함수)
+  - `<br>`, `</p>`, `</li>` → 줄바꿈 변환
+  - `<li>` → "• " 변환
+  - HTML 엔티티 디코딩 (`&nbsp;`, `&amp;` 등)
+
+##### 프론트엔드 변경사항
+- `export.ts`:
+  - `exportTestCasesToCSV()` 함수 추가
+  - `exportTestCasesToExcel()` 함수 추가
+  - `stripHtmlToText()`, `getFolderPathString()`, `getCaseId()`, `formatDate()` 헬퍼 함수
+- `TestCasesPage.tsx`:
+  - `ExportDropdown` 컴포넌트 추가
+  - `handleExport()` 함수 추가
+  - Export 상태 관리 (`isExportDropdownOpen`, `isExporting`)
+
+---
+
+#### 8-4. CSV Import 모달 전면 개선
+
+##### 완료 작업
+- ✅ **3단계 Import 프로세스**
+  1. 파일 업로드 (드래그앤드롭 지원)
+  2. 필드 매핑 (CSV 헤더 → DB 필드)
+  3. 결과 확인 (성공/실패 건수)
+- ✅ **자동 필드 매핑**
+  - CSV 헤더를 분석하여 DB 필드 자동 매핑
+  - 키워드 기반 매칭 (예: "title", "제목", "테스트케이스" → title 필드)
+- ✅ **미리보기 기능**
+  - 매핑 단계에서 첫 5개 행 미리보기
+  - 각 필드가 어떻게 매핑되는지 시각적 확인
+- ✅ **매핑 상태 표시**
+  - 매핑된 필드 수 표시
+  - 필수 필드(title) 매핑 여부 확인
+  - 미매핑 필드 경고
+
+##### 프론트엔드 변경사항
+- `CsvImportModal.tsx` 전면 재구현:
+  - `DB_FIELDS` 상수: 매핑 가능한 필드 정의
+  - `FIELD_KEYWORDS` 상수: 자동 매핑 키워드
+  - `autoMapField()` 함수: 자동 매핑 로직
+  - 3단계 UI (upload → mapping → result)
+  - 드래그앤드롭 파일 업로드
+  - 미리보기 테이블
+
+---
+
+#### 8-5. category 필드 추가 및 필터/그룹핑 기능
+
+##### 완료 작업
+- ✅ **TestCase에 category 필드 추가**
+  - 사용자가 직접 입력하는 문자열 필드
+  - nullable (선택 사항)
+  - 예: "Smoke", "Regression", "E2E", "Integration"
+- ✅ **테이블 UI에 Category 컬럼 추가**
+  - Type 컬럼 옆에 Category 컬럼 표시
+  - 파란색 배지로 표시, 없으면 "—" 표시
+- ✅ **디테일 패널에 Category 표시**
+  - 헤더에 배지로 표시
+  - Edit 모드에서 텍스트 입력으로 수정 가능
+- ✅ **TestCaseFormModal에 Category 입력 추가**
+  - Priority, Type과 나란히 3열 그리드로 배치
+  - 자유 입력 형식
+- ✅ **Category 필터 드롭다운**
+  - 툴바에 "Category" 필터 버튼 추가
+  - 사용 가능한 카테고리 목록 자동 수집
+  - "All Categories" 또는 특정 카테고리 선택 가능
+  - 필터 적용 시 필터링된 케이스 수 표시
+- ✅ **BulkEditModal에 Category 일괄 수정 추가**
+  - 3가지 옵션: 변경 안함 / 카테고리 설정 / 카테고리 제거
+  - 기존 카테고리 자동완성 (`<datalist>`) 지원
+- ✅ **Export/Import에 Category 필드 추가**
+  - CSV/Excel Export에 Category 컬럼 포함
+  - CSV Import에 category 필드 매핑 지원
+  - 키워드: category, tag, label, group, 카테고리, 태그 등
+
+##### 백엔드 변경사항
+- Prisma 스키마: `TestCase` 모델에 `category String?` 추가
+- `createTestCase`: category 처리 추가
+- `updateTestCase`: category 수정 지원
+- `bulkUpdateTestCases`: category 일괄 수정 지원 (설정/제거)
+- `importTestCases`: CSV Import 시 category 매핑
+
+##### 프론트엔드 변경사항
+- `testcase.ts`: `category?: string | null` 필드 추가
+- `TestCasesPage.tsx`:
+  - 테이블 헤더/행에 Category 컬럼 추가
+  - `categoryFilter` 상태 및 필터 드롭다운 추가
+  - `availableCategories` useMemo로 카테고리 목록 수집
+  - 섹션 빌드 시 카테고리 필터 적용
+- `TestCaseFormModal.tsx`: Category 입력 필드 추가 (3열 그리드)
+- `BulkEditModal`: Category 일괄 수정 옵션 추가 (라디오 버튼 + 입력)
+- `CsvImportModal.tsx`: category 필드 정의 및 키워드 추가
+- `export.ts`: Category 컬럼 추가
+
+##### 커밋
+- Commit: `12b2be9` - "feat: TestCase에 category 필드 추가 및 필터/그룹핑 기능 구현"
+- 7개 파일 변경 (+243, -28)
+
+---
+
 ## 🗄️ 데이터베이스 스키마
 
 ### User (사용자)
@@ -675,13 +848,15 @@ model Folder {
 ```prisma
 model TestCase {
   id             String     @id @default(cuid())
-  caseNumber     Int        @unique              // OVDR 형식 ID용 (OVDR0001, OVDR0002...)
+  caseNumber     Int        @unique              // OVDR 형식 ID용 (C1, C2...)
   title          String
   description    String?
   precondition   String?
   steps          String?
   expectedResult String?
   priority       String     @default("MEDIUM")   // LOW, MEDIUM, HIGH
+  automationType String     @default("MANUAL")   // MANUAL, AUTOMATED
+  category       String?                         // 사용자 정의 카테고리
   sequence       Float      @default(0)          // 폴더 내 정렬 순서
   folderId       String?
   folder         Folder?    @relation(fields: [folderId], references: [id])
@@ -985,5 +1160,5 @@ MIT License - 자유롭게 사용하고 수정하세요!
 
 **즐거운 테스팅 되세요! 🚀**
 
-마지막 업데이트: 2025-12-03 (Phase 7 완료)
+마지막 업데이트: 2025-12-04 (Phase 8 완료)
 
