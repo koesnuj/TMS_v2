@@ -17,6 +17,7 @@ export interface TestCase {
   folder?: { id: string; name: string; parentId?: string | null }; // 폴더 정보
   folderPath?: { id: string; name: string }[]; // 폴더 경로 (상위 > 하위)
   createdAt: string;
+  updatedAt?: string;
 }
 
 export const getTestCases = async (folderId?: string) => {

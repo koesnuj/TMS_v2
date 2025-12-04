@@ -5,7 +5,8 @@ import { TestCaseFormModal } from '../components/TestCaseFormModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { getFolderTree, createFolder, renameFolder, deleteFolder, bulkDeleteFolders, FolderTreeItem } from '../api/folder';
 import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases, AutomationType } from '../api/testcase';
-import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { exportTestCasesToCSV, exportTestCasesToExcel } from '../utils/export';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
@@ -117,6 +118,148 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, on
         </div>
       </div>
     </div>
+  );
+};
+
+// Export Dropdown Component
+type ExportTarget = 'all' | 'selected' | 'folder';
+type ExportFormat = 'csv' | 'excel';
+
+interface ExportDropdownProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onExport: (target: ExportTarget, format: ExportFormat) => void;
+  selectedCount: number;
+  hasFolder: boolean;
+  folderName?: string;
+}
+
+const ExportDropdown: React.FC<ExportDropdownProps> = ({
+  isOpen,
+  onClose,
+  onExport,
+  selectedCount,
+  hasFolder,
+  folderName,
+}) => {
+  const [target, setTarget] = useState<ExportTarget>('all');
+  const [isExporting, setIsExporting] = useState(false);
+
+  // 드롭다운이 열릴 때 기본값 설정
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedCount > 0) {
+        setTarget('selected');
+      } else if (hasFolder) {
+        setTarget('folder');
+      } else {
+        setTarget('all');
+      }
+    }
+  }, [isOpen, selectedCount, hasFolder]);
+
+  const handleExport = async (format: ExportFormat) => {
+    setIsExporting(true);
+    try {
+      await onExport(target, format);
+    } finally {
+      setIsExporting(false);
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      
+      {/* Dropdown */}
+      <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+        <div className="p-4 border-b border-slate-200">
+          <h4 className="font-semibold text-slate-900 text-sm mb-3">Export 대상</h4>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="exportTarget"
+                value="all"
+                checked={target === 'all'}
+                onChange={() => setTarget('all')}
+                className="text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm text-slate-700">모든 케이스</span>
+            </label>
+            <label className={`flex items-center gap-2 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+              <input
+                type="radio"
+                name="exportTarget"
+                value="selected"
+                checked={target === 'selected'}
+                onChange={() => setTarget('selected')}
+                disabled={selectedCount === 0}
+                className="text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm text-slate-700">
+                선택된 케이스만
+                {selectedCount > 0 && (
+                  <span className="ml-1 text-indigo-600 font-medium">({selectedCount}개)</span>
+                )}
+              </span>
+            </label>
+            {hasFolder && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="exportTarget"
+                  value="folder"
+                  checked={target === 'folder'}
+                  onChange={() => setTarget('folder')}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-slate-700">
+                  현재 폴더
+                  {folderName && (
+                    <span className="ml-1 text-slate-500">({folderName})</span>
+                  )}
+                </span>
+              </label>
+            )}
+          </div>
+        </div>
+        
+        <div className="p-3 bg-slate-50">
+          <p className="text-xs text-slate-500 mb-2">파일 형식 선택</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleExport('csv')}
+              disabled={isExporting}
+              className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isExporting ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <Download size={14} />
+              )}
+              CSV
+            </button>
+            <button
+              onClick={() => handleExport('excel')}
+              disabled={isExporting}
+              className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isExporting ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <Download size={14} />
+              )}
+              Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -835,6 +978,9 @@ const TestCasesPage: React.FC = () => {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
+  // Export State
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+
   // Folder Delete Modal State
   const [isFolderDeleteModalOpen, setIsFolderDeleteModalOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -1185,6 +1331,64 @@ const TestCasesPage: React.FC = () => {
     }
   };
 
+  // Export Handler
+  const handleExport = (target: ExportTarget, format: ExportFormat) => {
+    let casesToExport: TestCase[] = [];
+    let filename = 'test_cases';
+
+    switch (target) {
+      case 'all':
+        // 현재 화면에 보이는 모든 케이스 (sections 기반)
+        casesToExport = sections.flatMap(s => s.testCases);
+        filename = selectedFolderId ? `test_cases_filtered` : 'test_cases_all';
+        break;
+      case 'selected':
+        // 선택된 케이스만
+        casesToExport = testCases.filter(tc => selectedIds.has(tc.id));
+        filename = `test_cases_selected_${selectedIds.size}`;
+        break;
+      case 'folder':
+        // 현재 선택된 폴더의 케이스
+        if (selectedFolderId) {
+          casesToExport = sections.flatMap(s => s.testCases);
+          const folderName = sections[0]?.name || 'folder';
+          filename = `test_cases_${folderName.replace(/[^a-zA-Z0-9가-힣]/g, '_')}`;
+        }
+        break;
+    }
+
+    if (casesToExport.length === 0) {
+      alert('내보낼 테스트 케이스가 없습니다.');
+      return;
+    }
+
+    // 타임스탬프 추가
+    const timestamp = new Date().toISOString().slice(0, 10);
+    filename = `${filename}_${timestamp}`;
+
+    if (format === 'csv') {
+      exportTestCasesToCSV(casesToExport, filename);
+    } else {
+      exportTestCasesToExcel(casesToExport, filename);
+    }
+  };
+
+  // 현재 선택된 폴더 이름 가져오기
+  const getSelectedFolderName = (): string | undefined => {
+    if (!selectedFolderId) return undefined;
+    const findFolder = (items: FolderTreeItem[], id: string): string | undefined => {
+      for (const item of items) {
+        if (item.id === id) return item.name;
+        if (item.children) {
+          const found = findFolder(item.children, id);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    return findFolder(folders, selectedFolderId);
+  };
+
   const selectedCount = selectedIds.size;
   const totalCases = testCases.length;
 
@@ -1274,6 +1478,25 @@ const TestCasesPage: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-3">
+            {/* Export Button with Dropdown */}
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                icon={<Download size={16} />} 
+                onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+              >
+                Export
+                <ChevronDown size={14} className="ml-1" />
+              </Button>
+              <ExportDropdown
+                isOpen={isExportDropdownOpen}
+                onClose={() => setIsExportDropdownOpen(false)}
+                onExport={handleExport}
+                selectedCount={selectedCount}
+                hasFolder={!!selectedFolderId}
+                folderName={getSelectedFolderName()}
+              />
+            </div>
             <Button 
               variant="outline" 
               icon={<Upload size={16} />} 
