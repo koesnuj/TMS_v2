@@ -314,9 +314,11 @@ TMS_v2/
 
 ---
 
-### Phase 7: 폴더 드래그앤드롭 및 관리 기능 (2025-12-03)
+### Phase 7: 폴더/테스트케이스 드래그앤드롭, Test Cases/Plans 페이지 전면 리디자인 (2025-12-03)
 
-#### 완료 작업
+#### 7-1. 폴더 드래그앤드롭 및 관리 기능
+
+##### 완료 작업
 - ✅ **폴더 드래그앤드롭 구현** (`@dnd-kit` 라이브러리 활용)
   - 같은 레벨 내 순서 변경 (위/아래 드래그)
   - 부모/자식 관계 변경 (폴더 위에 드롭하면 자식으로 이동)
@@ -338,27 +340,27 @@ TMS_v2/
 - ✅ **버그 수정**
   - 회원가입 API 엔드포인트 불일치 수정 (`/auth/signup` → `/auth/register`)
 
-#### 백엔드 변경사항
+##### 백엔드 변경사항
 - Prisma 스키마: `Folder` 모델에 `order` 필드 추가 (Float, 정렬용)
 - 새 API 엔드포인트:
   - `PATCH /api/folders/:id/move` - 폴더 이동 (부모 변경 + 순서 변경)
   - `PATCH /api/folders/:id/rename` - 폴더 이름 변경
   - `PATCH /api/folders/reorder` - 폴더 순서 일괄 업데이트
 
-#### 프론트엔드 변경사항
+##### 프론트엔드 변경사항
 - `FolderTree.tsx`: 드래그앤드롭 기능 전면 재구현
 - `InputModal.tsx`: 새 UI 컴포넌트 추가
 - `TestCasesPage.tsx`: 폴더 생성/이름 변경 모달 연동
 
-#### 커밋
+##### 커밋
 - Commit: `b9a7452` - "feat: 폴더 드래그앤드롭 및 이름 변경 기능 추가"
 - 8개 파일 변경 (+918, -52)
 
 ---
 
-### Phase 8: 테스트케이스 드래그앤드롭 및 다중 선택 기능 (2025-12-03)
+#### 7-2. 테스트케이스 드래그앤드롭 및 다중 선택 기능
 
-#### 완료 작업
+##### 완료 작업
 - ✅ **테스트케이스 순서 변경 (드래그앤드롭)**
   - 테이블 내에서 드래그로 순서 변경
   - `sequence` 필드를 활용한 정렬
@@ -385,11 +387,35 @@ TMS_v2/
   - 선택된 항목 일괄 Priority 변경
   - 선택된 항목 일괄 삭제
 
+##### 백엔드 변경사항
+- Prisma 스키마:
+  - `TestCase` 모델에 `caseNumber Int @unique` 필드 추가
+  - `TestCase` 모델에 `sequence Float @default(0)` 필드 추가
+- 새 API 엔드포인트:
+  - `POST /api/testcases/reorder` - 테스트케이스 순서 변경
+  - `POST /api/testcases/move` - 테스트케이스 폴더 이동 (다중)
+  - `PATCH /api/testcases/bulk` - 테스트케이스 일괄 수정
+  - `DELETE /api/testcases/bulk` - 테스트케이스 일괄 삭제
+- 테스트케이스 조회 시 `folderPath` 반환 (상위 폴더 경로)
+
+##### 프론트엔드 변경사항
+- `TestCasesPage.tsx`: 전면 재구현
+  - `@dnd-kit` 라이브러리 활용
+  - `SortableTestCaseRow` 컴포넌트 (드래그 가능한 행)
+  - `DroppableFolderOverlay` 컴포넌트 (폴더 드롭 영역)
+  - `BulkEditModal` 컴포넌트 (일괄 편집)
+- `testcase.ts` API:
+  - `reorderTestCases()` 함수 추가
+  - `moveTestCasesToFolder()` 함수 추가
+  - `bulkUpdateTestCases()` 함수 추가
+  - `bulkDeleteTestCases()` 함수 추가
+  - `TestCase` 인터페이스에 `caseNumber`, `folderPath` 필드 추가
+
 ---
 
-### Phase 9: Test Cases 페이지 전면 리디자인 및 폴더 관리 강화 (2025-12-03)
+#### 7-3. Test Cases 페이지 전면 리디자인 및 폴더 관리 강화
 
-#### 완료 작업
+##### 완료 작업
 - ✅ **Test Cases 페이지 레이아웃 전면 리디자인**
   - TestRail 스타일 "섹션 헤더 + 테이블" 구조로 변경
   - 각 섹션(폴더)별로 테스트케이스 개수 배지 표시
@@ -430,7 +456,7 @@ TMS_v2/
   - `DOMPurify`로 XSS 공격 방지
   - 이미지 hover 시 커서 변경 (zoom-in)
 
-#### 백엔드 변경사항
+##### 백엔드 변경사항
 - 새 API 엔드포인트:
   - `DELETE /api/folders/:id` - 폴더 개별 삭제 (하위 폴더 및 테스트케이스 포함)
   - `DELETE /api/folders/bulk` - 폴더 일괄 삭제
@@ -439,7 +465,7 @@ TMS_v2/
 - `getAllDescendantIds()` 헬퍼 함수로 재귀적 폴더 ID 수집
 - 정적 파일 서빙: `/uploads/images/` 경로
 
-#### 프론트엔드 변경사항
+##### 프론트엔드 변경사항
 - `TestCasesPage.tsx`: 섹션 기반 레이아웃으로 전면 재구현
   - `SectionHeader` 컴포넌트 (폴더명 + 케이스 수 배지)
   - `TestCaseRow` 컴포넌트 (체크박스 + ID + Title + Priority + 상세 버튼)
@@ -453,11 +479,11 @@ TMS_v2/
 - `upload.ts`: 이미지 업로드 API 클라이언트 추가
 - `folder.ts`: `deleteFolder()`, `bulkDeleteFolders()` 함수 추가
 
-#### 신규 의존성
+##### 신규 의존성
 - `@tiptap/extension-image` - Rich Text Editor 이미지 확장
 - `dompurify`, `@types/dompurify` - HTML Sanitization
 
-#### 발생한 문제 및 해결
+##### 발생한 문제 및 해결
 
 1. **SQLite autoincrement 제한 문제**
    - 문제: `caseNumber Int @unique @default(autoincrement())` 사용 시 `P1012` 오류
@@ -483,35 +509,11 @@ TMS_v2/
      2. 테스트케이스 드래그 시에만 `DroppableFolderOverlay` 오버레이 표시
      3. 두 기능이 독립적으로 동작하도록 분리
 
-#### 백엔드 변경사항
-- Prisma 스키마:
-  - `TestCase` 모델에 `caseNumber Int @unique` 필드 추가
-  - `TestCase` 모델에 `sequence Float @default(0)` 필드 추가
-- 새 API 엔드포인트:
-  - `POST /api/testcases/reorder` - 테스트케이스 순서 변경
-  - `POST /api/testcases/move` - 테스트케이스 폴더 이동 (다중)
-  - `PATCH /api/testcases/bulk` - 테스트케이스 일괄 수정
-  - `DELETE /api/testcases/bulk` - 테스트케이스 일괄 삭제
-- 테스트케이스 조회 시 `folderPath` 반환 (상위 폴더 경로)
-
-#### 프론트엔드 변경사항
-- `TestCasesPage.tsx`: 전면 재구현
-  - `@dnd-kit` 라이브러리 활용
-  - `SortableTestCaseRow` 컴포넌트 (드래그 가능한 행)
-  - `DroppableFolderOverlay` 컴포넌트 (폴더 드롭 영역)
-  - `BulkEditModal` 컴포넌트 (일괄 편집)
-- `testcase.ts` API:
-  - `reorderTestCases()` 함수 추가
-  - `moveTestCasesToFolder()` 함수 추가
-  - `bulkUpdateTestCases()` 함수 추가
-  - `bulkDeleteTestCases()` 함수 추가
-  - `TestCase` 인터페이스에 `caseNumber`, `folderPath` 필드 추가
-
 ---
 
-### Phase 10: Test Plan 아카이브 기능 및 UI 개선 (2025-12-03)
+#### 7-4. Test Plan 아카이브 기능 및 UI 개선
 
-#### 완료 작업
+##### 완료 작업
 - ✅ **Test Plan 아카이브 기능**
   - 플랜 상태: ACTIVE / ARCHIVED
   - 개별 아카이브/복원 (Archive/Restore)
@@ -531,7 +533,7 @@ TMS_v2/
   - 선택 시 상단에 Archive/Restore/Delete 버튼 노출
   - Indeterminate 상태 지원 (일부 선택 시)
 
-#### 백엔드 변경사항
+##### 백엔드 변경사항
 - 새 API 엔드포인트:
   - `PATCH /api/plans/:planId/archive` - 플랜 아카이브
   - `PATCH /api/plans/:planId/unarchive` - 플랜 복원
@@ -541,7 +543,7 @@ TMS_v2/
   - `DELETE /api/plans/bulk` - 일괄 삭제
 - `GET /api/plans` - status 필터 개선 (ALL 옵션 추가)
 
-#### 프론트엔드 변경사항
+##### 프론트엔드 변경사항
 - `plan.ts` API:
   - `archivePlan()`, `unarchivePlan()`, `deletePlan()` 함수 추가
   - `bulkArchivePlans()`, `bulkUnarchivePlans()`, `bulkDeletePlans()` 함수 추가
@@ -555,9 +557,9 @@ TMS_v2/
 
 ---
 
-### Phase 11: Test Plan/Run 페이지 TestRail 스타일 리디자인 (2025-12-03)
+#### 7-5. Test Plan/Run 페이지 TestRail 스타일 리디자인
 
-#### 완료 작업
+##### 완료 작업
 - ✅ **Test Plan 생성 페이지 한글화**
   - 모든 UI 텍스트를 한글로 번역
   - 버튼, 라벨, 플레이스홀더 등 전체 한글화
@@ -598,11 +600,11 @@ TMS_v2/
   - 전체 높이 사용 (위아래 여백 없음)
   - 선택된 케이스의 상세 정보 표시
 
-#### 백엔드 변경사항
+##### 백엔드 변경사항
 - `GET /api/plans/:planId` - 테스트 케이스의 폴더 정보 포함
   - `testCase.folder` 관계 추가 (id, name, parentId)
 
-#### 프론트엔드 변경사항
+##### 프론트엔드 변경사항
 - `CreatePlanPage.tsx` 전면 재구현:
   - 섹션 기반 테스트 케이스 선택 UI
   - `buildSections()` 헬퍼 함수
@@ -619,7 +621,7 @@ TMS_v2/
   - 전체 너비/높이 사용
   - 헤더 패딩 축소
 
-#### 레이아웃 구조
+##### 레이아웃 구조
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ ← 플랜 목록  |  다른 플랜 선택 ▼                                             │
@@ -983,5 +985,5 @@ MIT License - 자유롭게 사용하고 수정하세요!
 
 **즐거운 테스팅 되세요! 🚀**
 
-마지막 업데이트: 2025-12-03 (Phase 11 완료)
+마지막 업데이트: 2025-12-03 (Phase 7 완료)
 
