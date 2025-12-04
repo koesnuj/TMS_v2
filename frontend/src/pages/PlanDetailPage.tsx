@@ -667,7 +667,7 @@ const PlanDetailPage: React.FC = () => {
         )}
 
         {/* Center Column: Summary + Table */}
-        <div className="flex-[0.5] min-w-[400px] flex flex-col overflow-hidden bg-white border-r border-slate-200">
+        <div className="flex-[0.6] min-w-[500px] flex flex-col overflow-hidden bg-white border-r border-slate-200">
           {/* Summary Section */}
           <div className="flex-shrink-0 border-b border-slate-200 p-4 bg-white">
             {/* Title Row with Action Buttons */}
@@ -846,11 +846,13 @@ const PlanDetailPage: React.FC = () => {
                       }
                     </button>
                   </th>
-                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-24">ID</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-20">ID</th>
                   <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Title</th>
-                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-16">Pri</th>
-                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-24">Assignee</th>
-                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-28">Result</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-14">Pri</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-16">Type</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-20">Category</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-20">Assignee</th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider w-24">Result</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
@@ -889,6 +891,22 @@ const PlanDetailPage: React.FC = () => {
                       }`}>
                         {item.testCase.priority.charAt(0)}
                       </span>
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap align-middle">
+                      <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${
+                        item.testCase.automationType === 'AUTOMATED' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {item.testCase.automationType === 'AUTOMATED' ? 'Auto' : 'Man'}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap align-middle">
+                      {item.testCase.category ? (
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 truncate max-w-[70px] inline-block">
+                          {item.testCase.category}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap align-middle" onClick={(e) => e.stopPropagation()}>
                       <select
@@ -938,7 +956,7 @@ const PlanDetailPage: React.FC = () => {
         </div>
 
         {/* Right Detail Panel - Full height, always visible */}
-        <div className="flex-[0.5] min-w-[380px] h-full bg-white">
+        <div className="flex-[0.4] min-w-[350px] h-full bg-white">
           {selectedItem ? (
             <TestCaseDetailColumn
               planItem={selectedItem}
