@@ -32,6 +32,92 @@ export async function getDashboardStats(req: AuthRequest, res: Response) {
   }
 }
 
+// 새로운 Overview 통계 API
+export async function getOverviewStats(req: AuthRequest, res: Response) {
+  try {
+    const [activePlansCount, manualCases, automatedCases] = await prisma.$transaction([
+      prisma.plan.count({ where: { status: 'ACTIVE' } }),
+      prisma.testCase.count({ where: { automationType: 'MANUAL' } }),
+      prisma.testCase.count({ where: { automationType: 'AUTOMATED' } })
+    ]);
+
+    const totalCases = manualCases + automatedCases;
+    const manualRatio = totalCases > 0 ? Math.round((manualCases / totalCases) * 100) : 0;
+    const automatedRatio = totalCases > 0 ? Math.round((automatedCases / totalCases) * 100) : 0;
+
+    res.json({
+      success: true,
+      data: {
+        activePlans: activePlansCount,
+        manualCases,
+        automatedCases,
+        ratio: {
+          manual: manualRatio,
+          automated: automatedRatio
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Overview stats error:', error);
+    res.status(500).json({ success: false, message: 'Overview 통계 조회 실패' });
+  }
+}
+
+// Active Test Plans 카드 데이터 API
+export async function getActivePlans(req: AuthRequest, res: Response) {
+  try {
+    const activePlans = await prisma.plan.findMany({
+      where: { status: 'ACTIVE' },
+      include: {
+        items: {
+          select: {
+            id: true,
+            result: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const planCards = activePlans.map(plan => {
+      const items = plan.items;
+      const totalItems = items.length;
+      
+      // Status counts 계산
+      const statusCounts = {
+        pass: items.filter(item => item.result === 'PASS').length,
+        fail: items.filter(item => item.result === 'FAIL').length,
+        block: items.filter(item => item.result === 'BLOCK').length,
+        untested: items.filter(item => item.result === 'NOT_RUN').length,
+        inProgress: items.filter(item => item.result === 'IN_PROGRESS').length
+      };
+
+      // Progress 계산 (PASS + FAIL + BLOCK을 완료된 것으로 간주)
+      const completedCount = statusCounts.pass + statusCounts.fail + statusCounts.block;
+      const progress = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+
+      return {
+        id: plan.id,
+        title: plan.name,
+        description: plan.description || '',
+        caseCount: totalItems,
+        statusCounts,
+        progress,
+        createdBy: plan.createdBy,
+        createdAt: plan.createdAt
+      };
+    });
+
+    res.json({
+      success: true,
+      data: planCards
+    });
+  } catch (error) {
+    console.error('Active plans error:', error);
+    res.status(500).json({ success: false, message: 'Active Plans 조회 실패' });
+  }
+}
+
 export async function getMyAssignments(req: AuthRequest, res: Response) {
   try {
     const myAssignments = await prisma.planItem.findMany({

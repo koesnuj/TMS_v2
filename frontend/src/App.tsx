@@ -12,6 +12,7 @@ import TestCasesPage from './pages/TestCasesPage';
 import PlansPage from './pages/PlansPage';
 import CreatePlanPage from './pages/CreatePlanPage';
 import PlanDetailPage from './pages/PlanDetailPage';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   return (
@@ -26,7 +27,11 @@ function App() {
           <Route element={<Layout />}>
             <Route
               path="/"
-              element={<Navigate to="/testcases" replace />}
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
             />
             
             <Route
