@@ -858,7 +858,7 @@ const PlanDetailPage: React.FC = () => {
                   </th>
                   <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">ID</th>
                   <th className="px-2 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Title</th>
-                  <th className="px-2 py-2 text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Pri</th>
+                  <th className="px-2 py-2 text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Priority</th>
                   <th className="px-2 py-2 text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Type</th>
                   <th className="px-2 py-2 text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Category</th>
                   <th className="px-2 py-2 text-center text-[10px] font-semibold text-slate-500 uppercase tracking-wider align-middle">Assignee</th>
