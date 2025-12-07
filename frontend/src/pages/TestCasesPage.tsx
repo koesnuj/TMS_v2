@@ -86,7 +86,7 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, av
     if (automationType) updates.automationType = automationType;
     if (categoryAction === 'set' && category) updates.category = category;
     if (categoryAction === 'clear') updates.category = null;
-    if (folderAction === 'move') updates.folderId = selectedFolderId;
+    if (folderAction === 'move') updates.folderId = selectedFolderId || undefined;
     onApply(updates);
   };
 
@@ -622,7 +622,7 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
         priority: testCase.priority,
         automationType: testCase.automationType || 'MANUAL',
         category: testCase.category || '',
-        folderId: testCase.folderId || null,
+        folderId: testCase.folderId || undefined,
       });
       setIsEditing(false);
     }
@@ -685,7 +685,7 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
         priority: testCase.priority,
         automationType: testCase.automationType || 'MANUAL',
         category: testCase.category || '',
-        folderId: testCase.folderId || null,
+        folderId: testCase.folderId || undefined,
       });
     }
     setIsEditing(false);
@@ -812,7 +812,7 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
                 </label>
                 <select
                   value={editData.folderId || ''}
-                  onChange={(e) => setEditData({ ...editData, folderId: e.target.value || null })}
+                  onChange={(e) => setEditData({ ...editData, folderId: e.target.value || undefined })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                 >
                   <option value="">Root (Uncategorized)</option>

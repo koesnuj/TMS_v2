@@ -126,7 +126,7 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         priority,
         automationType,
         category: category.trim() || null,
-        folderId: selectedFolderId,
+        folderId: selectedFolderId || undefined,
       };
 
       if (isEditMode && initialData) {
