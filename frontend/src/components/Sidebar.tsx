@@ -44,14 +44,14 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col z-20 h-screen fixed left-0 top-0">
       {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-100">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="h-32 flex items-center px-6 border-b border-slate-100">
+        <Link to="/" className="flex items-center gap-3">
           <img 
             src="/logo.png" 
             alt="ORCA Logo" 
-            className="w-12 h-12 rounded-lg object-contain shadow-sm" 
+            className="w-32 h-32 rounded-xl object-contain shadow-md" 
           />
-          <span className="text-lg font-bold text-slate-800 tracking-tight">ORCA</span>
+          <span className="text-xl font-bold text-slate-800 tracking-tight">ORCA</span>
         </Link>
       </div>
 
