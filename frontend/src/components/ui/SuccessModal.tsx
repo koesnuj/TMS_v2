@@ -59,50 +59,50 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      {/* 모달 카드 - 작은 크기 */}
+      {/* 모달 카드 */}
       <div
-        className="bg-white rounded-lg shadow-xl max-w-xs w-full transform transition-all animate-in fade-in zoom-in duration-200"
+        className="bg-white rounded-xl shadow-2xl max-w-sm w-full transform transition-all animate-in fade-in zoom-in duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="success-modal-title"
         aria-describedby="success-modal-description"
       >
         {/* 헤더 */}
-        <div className="flex items-start gap-3 p-4 pb-3">
+        <div className="flex items-start gap-4 p-6 pb-4">
           {/* 아이콘 */}
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-            <CheckCircle size={20} className="text-emerald-600" />
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <CheckCircle size={24} className="text-emerald-600" />
           </div>
 
           {/* 제목 & 닫기 버튼 */}
           <div className="flex-1 min-w-0">
-            <h3 id="success-modal-title" className="text-base font-semibold text-slate-900">
+            <h3 id="success-modal-title" className="text-lg font-semibold text-slate-900">
               {title}
             </h3>
           </div>
 
           <button
             onClick={onClose}
-            className="flex-shrink-0 p-1 hover:bg-slate-100 rounded transition-colors"
+            className="flex-shrink-0 p-1 hover:bg-slate-100 rounded-lg transition-colors"
             aria-label="Close"
           >
-            <X size={16} className="text-slate-400" />
+            <X size={20} className="text-slate-400" />
           </button>
         </div>
 
         {/* 메시지 */}
-        <div className="px-4 pb-3">
+        <div className="px-6 pb-4">
           <p id="success-modal-description" className="text-sm text-slate-600 leading-relaxed">
             {message}
           </p>
         </div>
 
         {/* 액션 버튼 */}
-        <div className="flex items-center justify-end gap-2 px-4 py-3 bg-slate-50 rounded-b-lg border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 rounded-b-xl border-t border-slate-100">
           <Button
             onClick={onClose}
             variant="primary"
-            size="sm"
+            size="md"
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {buttonText}

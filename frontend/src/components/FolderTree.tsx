@@ -211,7 +211,7 @@ const DraggableFolderItem: React.FC<{
     <div ref={setNodeRef} style={style} className="mb-0.5">
       <div
         ref={itemRef}
-        className={`relative flex items-center py-2.5 px-3 cursor-pointer rounded-md text-sm transition-all group ${
+        className={`relative flex items-center py-1.5 px-2 cursor-pointer rounded-md text-sm transition-all group ${
           isSelected 
             ? 'bg-white border border-indigo-200 shadow-sm text-indigo-700 font-medium' 
             : 'text-slate-600 hover:bg-slate-100 border border-transparent'
@@ -549,7 +549,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
       <div className="py-2">
         {/* All Cases Item - 드래그 대상 아님 */}
         <div
-          className={`flex items-center py-2.5 px-3 mb-1 cursor-pointer rounded-md text-sm transition-colors ${
+          className={`flex items-center py-1.5 px-2 mb-1 cursor-pointer rounded-md text-sm transition-colors ${
             selectedFolderId === null
               ? 'bg-white border border-indigo-200 shadow-sm text-indigo-700 font-medium'
               : 'text-slate-600 hover:bg-slate-100 border border-transparent'

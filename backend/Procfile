@@ -1,1 +1,0 @@
-web: npx prisma db push && npm run prisma:seed && node dist/index.js

@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { RichTextEditor } from './RichTextEditor';
 import { createTestCase, updateTestCase, TestCase, AutomationType } from '../api/testcase';
+import { getFolderTree, FolderTreeItem } from '../api/folder';
 
 interface TestCaseFormModalProps {
   isOpen: boolean;
@@ -27,10 +28,29 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
   const [automationType, setAutomationType] = useState<AutomationType>('MANUAL');
   const [category, setCategory] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<FolderTreeItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const isEditMode = !!initialData;
+
+  // 폴더 트리 로드
+  useEffect(() => {
+    const loadFolders = async () => {
+      try {
+        const response = await getFolderTree();
+        if (response.success) {
+          setFolders(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load folders', error);
+      }
+    };
+    if (isOpen) {
+      loadFolders();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -42,6 +62,7 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         setPriority(initialData.priority || 'MEDIUM');
         setAutomationType(initialData.automationType || 'MANUAL');
         setCategory(initialData.category || '');
+        setSelectedFolderId(initialData.folderId || null);
       } else {
         setTitle('');
         setPrecondition('');
@@ -50,10 +71,11 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         setPriority('MEDIUM');
         setAutomationType('MANUAL');
         setCategory('');
+        setSelectedFolderId(folderId);
       }
       setError('');
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, folderId]);
 
   // ESC key handler
   useEffect(() => {
@@ -104,7 +126,7 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
         priority,
         automationType,
         category: category.trim() || null,
-        ...(folderId ? { folderId } : {}),
+        folderId: selectedFolderId,
       };
 
       if (isEditMode && initialData) {
@@ -128,6 +150,20 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
       handleClose();
     }
   };
+
+  // 폴더 트리를 플랫 리스트로 변환 (depth 포함)
+  const flattenFolders = (items: FolderTreeItem[], depth = 0): Array<{ id: string; name: string; depth: number }> => {
+    const result: Array<{ id: string; name: string; depth: number }> = [];
+    items.forEach(item => {
+      result.push({ id: item.id, name: item.name, depth });
+      if (item.children && item.children.length > 0) {
+        result.push(...flattenFolders(item.children, depth + 1));
+      }
+    });
+    return result;
+  };
+
+  const flatFolders = flattenFolders(folders);
 
   if (!isOpen) return null;
 
@@ -174,6 +210,26 @@ export const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
               disabled={isSubmitting}
               autoFocus
             />
+          </div>
+
+          {/* Folder Selection */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Folder
+            </label>
+            <select
+              value={selectedFolderId || ''}
+              onChange={(e) => setSelectedFolderId(e.target.value || null)}
+              disabled={isSubmitting}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
+            >
+              <option value="">Root (Uncategorized)</option>
+              {flatFolders.map(folder => (
+                <option key={folder.id} value={folder.id}>
+                  {'\u00A0\u00A0'.repeat(folder.depth)}└─ {folder.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Priority, Automation Type & Category */}

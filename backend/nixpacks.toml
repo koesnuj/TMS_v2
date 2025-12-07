@@ -10,5 +10,5 @@ cmds = ["npm install"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx prisma db push --force-reset && node dist/index.js"
+cmd = "npm start"
 

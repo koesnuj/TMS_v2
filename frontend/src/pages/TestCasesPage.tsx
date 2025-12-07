@@ -1,34 +1,19 @@
-// Test Cases Page with Drag & Drop Support - Updated 2025-12-07
+// Test Cases Page - Updated 2025-12-07
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragEndEvent,
-  DragMoveEvent,
-  UniqueIdentifier,
-  closestCenter,
-} from '@dnd-kit/core';
-import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { FolderTree } from '../components/FolderTree';
 import { CsvImportModal } from '../components/CsvImportModal';
 import { TestCaseFormModal } from '../components/TestCaseFormModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { getFolderTree, createFolder, renameFolder, deleteFolder, bulkDeleteFolders, FolderTreeItem } from '../api/folder';
-import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases, AutomationType, moveTestCasesToFolder } from '../api/testcase';
-import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Download, Tag, Bot, GripVertical } from 'lucide-react';
+import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases, AutomationType } from '../api/testcase';
+import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Download, Tag, Bot } from 'lucide-react';
 import { exportTestCasesToCSV, exportTestCasesToExcel } from '../utils/export';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { InputModal } from '../components/ui/InputModal';
 import { ImageLightbox } from '../components/ui/ImageLightbox';
-import { SuccessModal } from '../components/ui/SuccessModal';
 import DOMPurify from 'dompurify';
 
 // HTML 태그를 제거하고 텍스트만 추출하는 헬퍼 함수 (미래 사용 예정)
@@ -54,15 +39,18 @@ interface BulkEditModalProps {
   isOpen: boolean;
   selectedCount: number;
   availableCategories: string[];
+  folders: FolderTreeItem[];
   onClose: () => void;
-  onApply: (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null }) => void;
+  onApply: (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null; folderId?: string | null }) => void;
 }
 
-const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, availableCategories, onClose, onApply }) => {
+const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, availableCategories, folders, onClose, onApply }) => {
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | ''>('');
   const [automationType, setAutomationType] = useState<AutomationType | ''>('');
   const [category, setCategory] = useState<string>('');
   const [categoryAction, setCategoryAction] = useState<'keep' | 'set' | 'clear'>('keep');
+  const [folderAction, setFolderAction] = useState<'keep' | 'move'>('keep');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   // 모달이 열릴 때 선택 상태 초기화
   useEffect(() => {
@@ -71,21 +59,38 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, av
       setAutomationType('');
       setCategory('');
       setCategoryAction('keep');
+      setFolderAction('keep');
+      setSelectedFolderId(null);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  // 폴더 트리를 플랫 리스트로 변환 (depth 포함)
+  const flattenFolders = (items: FolderTreeItem[], depth = 0): Array<{ id: string; name: string; depth: number }> => {
+    const result: Array<{ id: string; name: string; depth: number }> = [];
+    items.forEach(item => {
+      result.push({ id: item.id, name: item.name, depth });
+      if (item.children && item.children.length > 0) {
+        result.push(...flattenFolders(item.children, depth + 1));
+      }
+    });
+    return result;
+  };
+
+  const flatFolders = flattenFolders(folders);
+
   const handleApply = () => {
-    const updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null } = {};
+    const updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null; folderId?: string | null } = {};
     if (priority) updates.priority = priority;
     if (automationType) updates.automationType = automationType;
     if (categoryAction === 'set' && category) updates.category = category;
     if (categoryAction === 'clear') updates.category = null;
+    if (folderAction === 'move') updates.folderId = selectedFolderId;
     onApply(updates);
   };
 
-  const hasChanges = priority !== '' || automationType !== '' || categoryAction !== 'keep';
+  const hasChanges = priority !== '' || automationType !== '' || categoryAction !== 'keep' || folderAction !== 'keep';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -184,6 +189,50 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({ isOpen, selectedCount, av
                 />
                 <span className="text-sm text-slate-600">카테고리 제거</span>
               </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Folder</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="folderAction"
+                  value="keep"
+                  checked={folderAction === 'keep'}
+                  onChange={() => setFolderAction('keep')}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-slate-600">변경 안함</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="folderAction"
+                  value="move"
+                  checked={folderAction === 'move'}
+                  onChange={() => setFolderAction('move')}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-slate-600">폴더 이동</span>
+              </label>
+              {folderAction === 'move' && (
+                <div className="ml-6">
+                  <select
+                    value={selectedFolderId || ''}
+                    onChange={(e) => setSelectedFolderId(e.target.value || null)}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  >
+                    <option value="">Root (Uncategorized)</option>
+                    {flatFolders.map(folder => (
+                      <option key={folder.id} value={folder.id}>
+                        {'\u00A0\u00A0'.repeat(folder.depth)}└─ {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -419,7 +468,6 @@ const SectionTableHeader: React.FC<SectionTableHeaderProps> = ({
   return (
     <tr className="bg-slate-50 border-b border-slate-200">
       <th className="px-3 py-2 w-10"></th>
-      <th className="px-2 py-2 w-8"></th>
       <th 
         className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-24 cursor-pointer hover:bg-slate-100 transition-colors"
         onClick={() => onSort(sectionId, 'id')}
@@ -476,34 +524,11 @@ const TestCaseRow: React.FC<TestCaseRowProps> = ({
 }) => {
   const caseId = testCase.caseNumber ? `C${testCase.caseNumber}` : testCase.id.substring(0, 6).toUpperCase();
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({
-    id: testCase.id,
-    data: {
-      type: 'testcase',
-      testCase,
-    }
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isSortableDragging ? 0.3 : 1,
-  };
-
   return (
     <tr 
-      ref={setNodeRef}
-      style={style}
       className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
         isSelected ? 'bg-indigo-50/50' : ''
-      } ${isDetailOpen ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : ''} ${isSortableDragging ? 'opacity-30' : ''}`}
+      } ${isDetailOpen ? 'bg-indigo-50 border-l-4 border-l-indigo-500' : ''}`}
       onClick={() => onOpenDetail(testCase)}
     >
       <td className="px-3 py-3 w-10" onClick={(e) => e.stopPropagation()}>
@@ -513,15 +538,6 @@ const TestCaseRow: React.FC<TestCaseRowProps> = ({
           onChange={() => onToggleSelect(testCase.id)}
           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer"
         />
-      </td>
-      <td className="px-2 py-3 w-8" onClick={(e) => e.stopPropagation()}>
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition-colors flex items-center justify-center"
-        >
-          <GripVertical size={16} />
-        </div>
       </td>
       <td className="px-4 py-3 text-sm font-mono text-slate-500 w-24">
         {caseId}
@@ -575,6 +591,7 @@ const TestCaseRow: React.FC<TestCaseRowProps> = ({
 interface TestCaseDetailPanelProps {
   testCase: TestCase | null;
   isOpen: boolean;
+  folders: FolderTreeItem[];
   onClose: () => void;
   onEdit: (tc: TestCase) => void;
   onDelete: (tc: TestCase) => void;
@@ -584,6 +601,7 @@ interface TestCaseDetailPanelProps {
 const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
   testCase,
   isOpen,
+  folders,
   onClose,
   onEdit: _onEdit,
   onDelete,
@@ -604,6 +622,7 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
         priority: testCase.priority,
         automationType: testCase.automationType || 'MANUAL',
         category: testCase.category || '',
+        folderId: testCase.folderId || null,
       });
       setIsEditing(false);
     }
@@ -666,10 +685,25 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
         priority: testCase.priority,
         automationType: testCase.automationType || 'MANUAL',
         category: testCase.category || '',
+        folderId: testCase.folderId || null,
       });
     }
     setIsEditing(false);
   };
+
+  // 폴더 트리를 플랫 리스트로 변환 (depth 포함)
+  const flattenFolders = (items: FolderTreeItem[], depth = 0): Array<{ id: string; name: string; depth: number }> => {
+    const result: Array<{ id: string; name: string; depth: number }> = [];
+    items.forEach(item => {
+      result.push({ id: item.id, name: item.name, depth });
+      if (item.children && item.children.length > 0) {
+        result.push(...flattenFolders(item.children, depth + 1));
+      }
+    });
+    return result;
+  };
+
+  const flatFolders = flattenFolders(folders);
 
   if (!isOpen || !testCase) return null;
 
@@ -769,6 +803,25 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
                   onChange={(e) => setEditData({ ...editData, title: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
+              </div>
+
+              {/* Folder Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Folder
+                </label>
+                <select
+                  value={editData.folderId || ''}
+                  onChange={(e) => setEditData({ ...editData, folderId: e.target.value || null })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                >
+                  <option value="">Root (Uncategorized)</option>
+                  {flatFolders.map(folder => (
+                    <option key={folder.id} value={folder.id}>
+                      {'\u00A0\u00A0'.repeat(folder.depth)}└─ {folder.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Priority, Automation Type & Category */}
@@ -1103,15 +1156,6 @@ const TestCasesPage: React.FC = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Drag and Drop State
-  const [activeTestCaseId, setActiveTestCaseId] = useState<UniqueIdentifier | null>(null);
-  const [draggedTestCases, setDraggedTestCases] = useState<TestCase[]>([]);
-  const [testCaseDragOverFolderId, setTestCaseDragOverFolderId] = useState<string | null>(null);
-  
-  // Move Success Modal
-  const [isMoveSuccessModalOpen, setIsMoveSuccessModalOpen] = useState(false);
-  const [moveSuccessInfo, setMoveSuccessInfo] = useState<{ count: number; folderName: string } | null>(null);
-  
   // Edit/Create Modal State
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingTestCase, setEditingTestCase] = useState<TestCase | null>(null);
@@ -1152,15 +1196,6 @@ const TestCasesPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<AutomationType | null>(null);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [isTypeFilterDropdownOpen, setIsTypeFilterDropdownOpen] = useState(false);
-
-  // Drag and Drop Sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   // URL 쿼리 파라미터에서 필터 초기화
   useEffect(() => {
@@ -1521,7 +1556,7 @@ const TestCasesPage: React.FC = () => {
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditApply = async (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null }) => {
+  const handleBulkEditApply = async (updates: { priority?: 'LOW' | 'MEDIUM' | 'HIGH'; automationType?: AutomationType; category?: string | null; folderId?: string | null }) => {
     try {
       await bulkUpdateTestCases(Array.from(selectedIds), updates);
       setIsBulkEditModalOpen(false);
@@ -1610,139 +1645,10 @@ const TestCasesPage: React.FC = () => {
     return findFolder(folders, selectedFolderId);
   };
 
-  // Drag and Drop Handlers
-  const handleDragStart = (event: DragStartEvent) => {
-    const activeId = event.active.id as string;
-    const activeData = event.active.data?.current;
-    
-    // 폴더를 드래그하는 경우 무시 (FolderTree 자체 DndContext가 처리)
-    if (activeData?.type === 'folder') {
-      return;
-    }
-    
-    setActiveTestCaseId(activeId);
-    
-    // 드래그 시작한 테스트 케이스가 선택된 케이스들 중 하나인지 확인
-    if (selectedIds.has(activeId)) {
-      // 선택된 모든 케이스들을 드래그
-      const casesToDrag = testCases.filter(tc => selectedIds.has(tc.id));
-      setDraggedTestCases(casesToDrag);
-    } else {
-      // 선택되지 않은 경우 해당 케이스만 드래그
-      const caseToMove = testCases.find(tc => tc.id === activeId);
-      setDraggedTestCases(caseToMove ? [caseToMove] : []);
-    }
-  };
-
-  const handleDragMove = (event: DragMoveEvent) => {
-    const { over, active } = event;
-    
-    if (!over) {
-      setTestCaseDragOverFolderId(null);
-      return;
-    }
-    
-    // 테스트 케이스를 드래그 중인지 확인
-    const activeData = active.data?.current;
-    const isTestCaseDrag = activeData?.type === 'testcase';
-    
-    if (!isTestCaseDrag) {
-      setTestCaseDragOverFolderId(null);
-      return;
-    }
-    
-    const overData = over.data?.current;
-    
-    // 폴더 위에 드래그 중인 경우
-    if (overData?.type === 'folder') {
-      const folderId = overData.folder?.id;
-      setTestCaseDragOverFolderId(folderId || null);
-    } else {
-      setTestCaseDragOverFolderId(null);
-    }
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    const activeData = active.data?.current;
-    
-    // 폴더 드래그인 경우 무시 (FolderTree가 처리)
-    if (activeData?.type === 'folder') {
-      return;
-    }
-    
-    setActiveTestCaseId(null);
-    setDraggedTestCases([]);
-    setTestCaseDragOverFolderId(null);
-    
-    if (!over) return;
-    
-    const overData = over.data?.current;
-    
-    // 폴더 위에 드롭한 경우
-    if (overData?.type === 'folder') {
-      const targetFolderId = overData.folder?.id || null;
-      const testCaseIdsToMove = draggedTestCases.map(tc => tc.id);
-      
-      if (testCaseIdsToMove.length === 0) return;
-      
-      try {
-        await moveTestCasesToFolder(testCaseIdsToMove, targetFolderId);
-        
-        // 성공 후 데이터 새로고침
-        await loadTestCases(selectedFolderId);
-        
-        // 선택 해제
-        setSelectedIds(new Set());
-        
-        // 성공 메시지
-        const folderName = overData.folder?.name || 'Root';
-        setMoveSuccessInfo({ count: testCaseIdsToMove.length, folderName });
-        setIsMoveSuccessModalOpen(true);
-      } catch (error) {
-        console.error('Failed to move test cases:', error);
-        alert('테스트 케이스 이동에 실패했습니다.');
-      }
-    }
-  };
-
-  const handleDragCancel = () => {
-    // 드래그 취소 시 상태 초기화 (폴더 드래그는 FolderTree에서 처리)
-    setActiveTestCaseId(null);
-    setDraggedTestCases([]);
-    setTestCaseDragOverFolderId(null);
-  };
-
   const selectedCount = selectedIds.size;
   const totalCases = testCases.length;
 
-  // 모든 폴더 ID 수집 (드롭 타겟으로 사용)
-  const getAllFolderIds = (items: FolderTreeItem[]): string[] => {
-    const ids: string[] = [];
-    const collect = (folders: FolderTreeItem[]) => {
-      folders.forEach(f => {
-        ids.push(f.id);
-        if (f.children) collect(f.children);
-      });
-    };
-    collect(items);
-    return ids;
-  };
-
-  const allFolderIds = getAllFolderIds(folders);
-  const allTestCaseIds = testCases.map(tc => tc.id);
-  const allDraggableIds = [...allFolderIds, ...allTestCaseIds];
-
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
-    >
-    <SortableContext items={allDraggableIds} strategy={verticalListSortingStrategy}>
     <div className="flex h-full">
       {/* Inner Sidebar: Folder Tree */}
       <div className="w-72 bg-slate-50 border-r border-slate-200 flex flex-col flex-shrink-0">
@@ -1811,8 +1717,6 @@ const TestCasesPage: React.FC = () => {
             selectedFolderIds={selectedFolderIds}
             onToggleFolderSelect={handleToggleFolderSelect}
             isBulkMode={isFolderBulkMode}
-            useExternalDnd={activeTestCaseId !== null}
-            testCaseDragOverId={testCaseDragOverFolderId}
           />
         </div>
       </div>
@@ -2100,6 +2004,7 @@ const TestCasesPage: React.FC = () => {
       <TestCaseDetailPanel
         testCase={selectedTestCase}
         isOpen={isDetailPanelOpen}
+        folders={folders}
         onClose={handleCloseDetail}
         onEdit={handleEditFromPanel}
         onDelete={handleDeleteFromPanel}
@@ -2139,6 +2044,7 @@ const TestCasesPage: React.FC = () => {
         isOpen={isBulkEditModalOpen}
         selectedCount={selectedCount}
         availableCategories={availableCategories}
+        folders={folders}
         onClose={() => setIsBulkEditModalOpen(false)}
         onApply={handleBulkEditApply}
       />
@@ -2202,38 +2108,7 @@ const TestCasesPage: React.FC = () => {
         variant="danger"
       />
 
-      {/* Move Success Modal */}
-      {moveSuccessInfo && (
-        <SuccessModal
-          isOpen={isMoveSuccessModalOpen}
-          onClose={() => {
-            setIsMoveSuccessModalOpen(false);
-            setMoveSuccessInfo(null);
-          }}
-          title="이동 완료"
-          message={`${moveSuccessInfo.count}개의 테스트 케이스를 "${moveSuccessInfo.folderName}" 폴더로 이동했습니다.`}
-        />
-      )}
-
-      {/* Drag Overlay */}
-      <DragOverlay dropAnimation={null}>
-        {activeTestCaseId && draggedTestCases.length > 0 ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-indigo-400 shadow-xl rounded-md">
-            <GripVertical size={14} className="text-indigo-400" />
-            <FileText size={14} className="text-indigo-600" />
-            <span className="text-xs font-semibold text-slate-900 whitespace-nowrap">
-              {draggedTestCases.length === 1
-                ? (draggedTestCases[0].title.length > 30 
-                    ? draggedTestCases[0].title.substring(0, 30) + '...' 
-                    : draggedTestCases[0].title)
-                : `${draggedTestCases.length}개 케이스`}
-            </span>
-          </div>
-        ) : null}
-      </DragOverlay>
     </div>
-    </SortableContext>
-    </DndContext>
   );
 };
 
