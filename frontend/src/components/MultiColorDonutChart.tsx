@@ -21,7 +21,7 @@ export const MultiColorDonutChart: React.FC<MultiColorDonutChartProps> = ({
   const viewBoxSize = 100;
   const center = viewBoxSize / 2;
   const radius = (viewBoxSize - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  // const circumference = 2 * Math.PI * radius; // 미래 사용 예정
 
   // 전체 케이스 수
   const totalCases = 

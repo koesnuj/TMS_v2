@@ -15,12 +15,12 @@ import { InputModal } from '../components/ui/InputModal';
 import { ImageLightbox } from '../components/ui/ImageLightbox';
 import DOMPurify from 'dompurify';
 
-// HTML 태그를 제거하고 텍스트만 추출하는 헬퍼 함수
-const stripHtmlTags = (html: string | null | undefined): string => {
-  if (!html) return '';
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
-};
+// HTML 태그를 제거하고 텍스트만 추출하는 헬퍼 함수 (미래 사용 예정)
+// const stripHtmlTags = (html: string | null | undefined): string => {
+//   if (!html) return '';
+//   const doc = new DOMParser().parseFromString(html, 'text/html');
+//   return doc.body.textContent || '';
+// };
 
 // 정렬 상태 타입
 type SortField = 'id' | 'title' | 'priority';
@@ -536,7 +536,7 @@ const TestCaseDetailPanel: React.FC<TestCaseDetailPanelProps> = ({
   testCase,
   isOpen,
   onClose,
-  onEdit,
+  onEdit: _onEdit,
   onDelete,
   onUpdate,
 }) => {

@@ -38,7 +38,7 @@ export const RunSummary: React.FC<RunSummaryProps> = ({
 
   // 완료된 케이스 수 (NOT_RUN 제외한 모든 상태)
   const completedCases = statusCounts.passed + statusCounts.failed + statusCounts.blocked + statusCounts.inProgress;
-  const progress = totalCases > 0 ? Math.round((completedCases / totalCases) * 100) : 0;
+  // const progress = totalCases > 0 ? Math.round((completedCases / totalCases) * 100) : 0; // 미래 사용 예정
 
 
   return (

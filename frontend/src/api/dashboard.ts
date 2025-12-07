@@ -8,7 +8,7 @@ export interface DashboardStats {
   myAssignedCount: number;
 }
 
-export interface DashboardActivity extends PlanItem {
+export interface DashboardActivity extends Omit<PlanItem, 'testCase'> {
   testCase: {
     title: string;
     priority?: string;
@@ -17,6 +17,7 @@ export interface DashboardActivity extends PlanItem {
     name: string;
     id: string;
   };
+  updatedAt: string;
 }
 
 // 새로운 Overview 통계 타입

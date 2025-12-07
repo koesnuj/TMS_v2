@@ -6,7 +6,6 @@ import { User } from '../api/types';
 import { ArrowLeft, PlayCircle, Filter, Search } from 'lucide-react';
 import { TestCaseDetailPanel } from '../components/TestCaseDetailPanel';
 import { Badge } from '../components/ui/Badge';
-import { Button } from '../components/ui/Button';
 
 /**
  * PlanDetailPage - 3단 레이아웃 구조

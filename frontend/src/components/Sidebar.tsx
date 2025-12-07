@@ -8,8 +8,7 @@ import {
   LogOut, 
   CheckSquare,
   BarChart2,
-  Users,
-  ChevronRight
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 

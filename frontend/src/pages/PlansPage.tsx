@@ -214,7 +214,7 @@ const PlansPage: React.FC = () => {
   };
 
   // 플랜 테이블 렌더링
-  const renderPlanTable = (sectionPlans: Plan[], allSectionPlans: Plan[]) => {
+  const renderPlanTable = (sectionPlans: Plan[], _allSectionPlans: Plan[]) => {
     const allSelected = sectionPlans.length > 0 && sectionPlans.every(p => selectedIds.has(p.id));
     const someSelected = sectionPlans.some(p => selectedIds.has(p.id));
 

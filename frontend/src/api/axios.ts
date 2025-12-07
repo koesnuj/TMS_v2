@@ -1,7 +1,23 @@
 import axios from 'axios';
 
+// 환경에 따라 API URL 설정
+const getBaseURL = () => {
+  // Vite 환경 변수 사용
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // 프로덕션 환경 (Vercel)
+  if (import.meta.env.PROD) {
+    return 'https://tmsv2-production.up.railway.app/api';
+  }
+  
+  // 개발 환경
+  return 'http://localhost:3001/api';
+};
+
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardStats, getMyAssignments, getRecentActivity, DashboardStats, DashboardActivity } from '../api/dashboard';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
+import { Badge, BadgeVariant } from '../components/ui/Badge';
 import { FileText, PlayCircle, CheckSquare, User, Activity, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
     { label: 'My Assignments', value: stats?.myAssignedCount || 0, icon: User, color: 'bg-amber-100 text-amber-600' },
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): BadgeVariant => {
     switch (status) {
       case 'PASS': return 'success';
       case 'FAIL': return 'error';
@@ -110,7 +110,7 @@ const HomePage: React.FC = () => {
                       <span className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                         {item.testCase.title}
                       </span>
-                      <Badge variant={getStatusColor(item.result) as any} size="sm">
+                      <Badge variant={getStatusColor(item.result)} size="sm">
                         {item.result.replace('_', ' ')}
                       </Badge>
                     </div>
@@ -163,7 +163,7 @@ const HomePage: React.FC = () => {
                         {' '}updated{' '}
                         <span className="font-medium text-indigo-600">{activity.testCase.title}</span>
                         {' '}to{' '}
-                        <Badge variant={getStatusColor(activity.result) as any} size="sm" className="ml-1 inline-flex">
+                        <Badge variant={getStatusColor(activity.result)} size="sm" className="ml-1 inline-flex">
                           {activity.result}
                         </Badge>
                       </p>

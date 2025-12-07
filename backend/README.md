@@ -5,57 +5,43 @@ Test Management System의 백엔드 API 서버입니다.
 ## 기술 스택
 
 - **Framework**: Express + TypeScript
-- **Database**: PostgreSQL
+- **Database**: SQLite (개발용, 설치 불필요)
 - **ORM**: Prisma
 - **Authentication**: JWT
 - **Password Hashing**: bcrypt
 
-## 설치 및 실행
+## 빠른 시작 (간편 설치)
 
-### 1. 의존성 설치
+### 1. 의존성 설치 (자동 설정 포함)
 
 ```bash
 npm install
 ```
 
-### 2. 환경 변수 설정
+이 명령어 하나로 다음이 자동으로 실행됩니다:
+- 패키지 설치
+- Prisma Client 생성
+- 데이터베이스 마이그레이션
 
-`env.example` 파일을 복사하여 `.env` 파일을 생성하고 필요한 값을 설정합니다.
-
-```bash
-cp env.example .env
-```
-
-`.env` 파일 예시:
-
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/tms_db"
-JWT_SECRET="your-super-secret-jwt-key"
-JWT_EXPIRES_IN="7d"
-PORT=3001
-NODE_ENV="development"
-FRONTEND_URL="http://localhost:5173"
-```
-
-### 3. 데이터베이스 마이그레이션
-
-```bash
-npm run prisma:migrate
-```
-
-### 4. Prisma Client 생성
-
-```bash
-npm run prisma:generate
-```
-
-### 5. 개발 서버 실행
+### 2. 개발 서버 실행
 
 ```bash
 npm run dev
 ```
 
 서버가 `http://localhost:3001`에서 실행됩니다.
+
+✅ **완료!** 별도의 데이터베이스 설치나 환경 변수 설정이 필요 없습니다.
+
+## 추가 설정 (선택사항)
+
+환경 변수를 커스터마이징하려면:
+
+```bash
+cp env.example .env
+```
+
+`.env` 파일에서 필요한 값을 수정하세요. (기본값으로도 작동합니다)
 
 ### 6. 프로덕션 빌드
 

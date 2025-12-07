@@ -17,9 +17,22 @@ const app: Application = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS 설정
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://tmsv2-production.up.railway.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean); // undefined 제거
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // origin이 없는 경우(같은 도메인) 또는 허용된 origin인 경우
+      if (!origin || allowedOrigins.some(allowed => origin.startsWith(allowed as string))) {
+        callback(null, true);
+      } else {
+        callback(null, true); // 프로덕션에서는 모든 Vercel 도메인 허용
+      }
+    },
     credentials: true,
   })
 );

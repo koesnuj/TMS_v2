@@ -34,6 +34,8 @@ export interface PlanItem {
   comment?: string;
   order?: number;
   executedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PlanDetail extends Plan {

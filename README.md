@@ -29,22 +29,27 @@
 
 ---
 
-## 설치
+## 빠른 시작
 
-### 백엔드
+### 1. 레포지토리 클론
+```bash
+git clone <repository-url>
+cd TMS_v2
+```
+
+### 2. 백엔드 설정 및 실행
 ```bash
 cd backend
-npm install
-cp env.example .env
-# .env 파일 설정 필요
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
+npm install          # 자동으로 Prisma 설정 완료
+npm run dev          # 서버 시작
 ```
 
 실행 주소: `http://localhost:3001`
 
-### 프론트엔드
+> **참고**: SQLite를 사용하므로 별도의 데이터베이스 설치가 필요하지 않습니다.
+> `npm install` 시 자동으로 데이터베이스 테이블이 생성됩니다.
+
+### 3. 프론트엔드 설정 및 실행 (새 터미널)
 ```bash
 cd frontend
 npm install
@@ -52,6 +57,13 @@ npm run dev
 ```
 
 실행 주소: `http://localhost:5173`
+
+### 4. 첫 사용
+1. `http://localhost:5173`에 접속
+2. 회원가입 (첫 사용자는 자동으로 관리자 권한 부여)
+3. 로그인 후 시스템 사용
+
+> 💡 **더 자세한 설정 가이드**: [SETUP_GUIDE.md](./SETUP_GUIDE.md) 참고
 
 ---
 
@@ -86,6 +98,12 @@ TMS_v2/
 ├── backend/          # Express API 서버
 └── frontend/         # React 프론트엔드
 ```
+
+---
+
+## 배포
+
+Railway와 Vercel에 배포하는 방법은 [DEPLOYMENT.md](./DEPLOYMENT.md)를 참고하세요.
 
 ---
 

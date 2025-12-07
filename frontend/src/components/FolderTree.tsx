@@ -15,7 +15,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FolderTreeItem, moveFolder, reorderFolders, renameFolder } from '../api/folder';
+import { FolderTreeItem, moveFolder } from '../api/folder';
 import { ChevronRight, ChevronDown, Folder as FolderIcon, Plus, Layers, GripVertical, Pencil, Trash2, CheckSquare, Square } from 'lucide-react';
 
 const MAX_DEPTH = 5;
@@ -371,8 +371,8 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
     return findFolderById(folders, activeId as string);
   }, [activeId, folders]);
 
-  // 모든 폴더 ID
-  const allFolderIds = useMemo(() => getAllFolderIds(folders), [folders]);
+  // 모든 폴더 ID (미래 사용 예정)
+  // const allFolderIds = useMemo(() => getAllFolderIds(folders), [folders]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id);

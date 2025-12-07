@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getPlanDetail, getPlans, PlanDetail, Plan, updatePlanItem, bulkUpdatePlanItems, TestResult, PlanItem } from '../api/plan';
 import { getAllUsers } from '../api/admin';
 import { User } from '../api/types';
-import { ArrowLeft, Search, PlayCircle, CheckSquare, Square, Download, FileText, Table } from 'lucide-react';
+import { ArrowLeft, Search, PlayCircle, CheckSquare, Square, FileText, Table } from 'lucide-react';
 import { TestCaseDetailColumn } from '../components/TestCaseDetailColumn';
 import { RunSummary } from '../components/RunSummary';
 import { StackedProgressBar } from '../components/StackedProgressBar';
@@ -250,7 +250,7 @@ const PlanDetailPage3Column: React.FC = () => {
   const blockCount = plan.items.filter(i => i.result === 'BLOCK').length;
   const inProgressCount = plan.items.filter(i => i.result === 'IN_PROGRESS').length;
   const notRunCount = plan.items.filter(i => i.result === 'NOT_RUN').length;
-  const progress = totalItems > 0 ? Math.round(((totalItems - notRunCount) / totalItems) * 100) : 0;
+  // const progress = totalItems > 0 ? Math.round(((totalItems - notRunCount) / totalItems) * 100) : 0; // 미래 사용 예정
 
   // 필터링된 아이템
   const filteredItems = plan.items.filter(item => {
