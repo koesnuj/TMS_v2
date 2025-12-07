@@ -22,23 +22,8 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
   }
 
   if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen p-8">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
-          <p className="text-slate-600 mb-6">
-            You don't have permission to access this page. Admin role is required.
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
+    // 관리자가 아닌 경우 홈으로 리다이렉트
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

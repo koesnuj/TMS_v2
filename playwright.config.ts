@@ -10,7 +10,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    headless: false, // 브라우저를 띄워서 보여줌
+    headless: true, // headless 모드로 실행
   },
 
   /* 서버 자동 실행 설정 */
