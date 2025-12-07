@@ -6,7 +6,7 @@ import { TestCaseFormModal } from '../components/TestCaseFormModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { getFolderTree, createFolder, renameFolder, deleteFolder, bulkDeleteFolders, FolderTreeItem } from '../api/folder';
 import { getTestCases, TestCase, deleteTestCase, updateTestCase, bulkUpdateTestCases, bulkDeleteTestCases, AutomationType } from '../api/testcase';
-import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Download, Filter, Tag, Bot } from 'lucide-react';
+import { Plus, Upload, FileText, Edit, Trash2, CheckSquare, Square, X, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Download, Tag, Bot } from 'lucide-react';
 import { exportTestCasesToCSV, exportTestCasesToExcel } from '../utils/export';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';

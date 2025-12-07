@@ -99,7 +99,7 @@ export const exportToExcel = ({ plan, items }: ExportData) => {
       item.result,
       item.comment || '-',
       item.executedAt ? new Date(item.executedAt).toLocaleString() : '-',
-      new Date(item.updatedAt).toLocaleString()
+      item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'
     ])
   ];
 

@@ -102,20 +102,20 @@ const getSiblingsByParentId = (folders: FolderTreeItem[], parentId: string | nul
   return parent?.children || [];
 };
 
-// 모든 폴더 ID를 평탄화하여 가져오기
-const getAllFolderIds = (folders: FolderTreeItem[]): string[] => {
-  const ids: string[] = [];
-  const traverse = (items: FolderTreeItem[]) => {
-    for (const item of items) {
-      ids.push(item.id);
-      if (item.children) {
-        traverse(item.children);
-      }
-    }
-  };
-  traverse(folders);
-  return ids;
-};
+// 모든 폴더 ID를 평탄화하여 가져오기 (미래 사용 예정)
+// const getAllFolderIds = (folders: FolderTreeItem[]): string[] => {
+//   const ids: string[] = [];
+//   const traverse = (items: FolderTreeItem[]) => {
+//     for (const item of items) {
+//       ids.push(item.id);
+//       if (item.children) {
+//         traverse(item.children);
+//       }
+//     }
+//   };
+//   traverse(folders);
+//   return ids;
+// };
 
 // 드래그 가능한 폴더 아이템
 const DraggableFolderItem: React.FC<{
