@@ -2,8 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm install --force",
   "framework": "vite",
+  "buildCacheMaxAge": 0,
   "rewrites": [
     {
       "source": "/(.*)",
