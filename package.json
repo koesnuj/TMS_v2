@@ -2,6 +2,10 @@
   "name": "tms_v2",
   "version": "1.0.0",
   "description": "TestRail을 대체하는 자체 구축형 테스트 케이스 관리 시스템입니다.",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
