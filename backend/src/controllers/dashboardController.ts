@@ -1,8 +1,9 @@
-import { Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../errors/AppError';
 
-export async function getDashboardStats(req: AuthRequest, res: Response) {
+export async function getDashboardStats(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     // 병렬로 통계 데이터 조회
     const [totalTestCases, activePlans, totalPlanItems, myAssignedCount] = await prisma.$transaction([
@@ -28,12 +29,12 @@ export async function getDashboardStats(req: AuthRequest, res: Response) {
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
-    res.status(500).json({ success: false, message: '대시보드 통계 조회 실패' });
+    return next(new AppError(500, { success: false, message: '대시보드 통계 조회 실패' }));
   }
 }
 
 // 새로운 Overview 통계 API
-export async function getOverviewStats(req: AuthRequest, res: Response) {
+export async function getOverviewStats(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const [activePlansCount, manualCases, automatedCases] = await prisma.$transaction([
       prisma.plan.count({ where: { status: 'ACTIVE' } }),
@@ -59,12 +60,12 @@ export async function getOverviewStats(req: AuthRequest, res: Response) {
     });
   } catch (error) {
     console.error('Overview stats error:', error);
-    res.status(500).json({ success: false, message: 'Overview 통계 조회 실패' });
+    return next(new AppError(500, { success: false, message: 'Overview 통계 조회 실패' }));
   }
 }
 
 // Active Test Plans 카드 데이터 API
-export async function getActivePlans(req: AuthRequest, res: Response) {
+export async function getActivePlans(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const activePlans = await prisma.plan.findMany({
       where: { status: 'ACTIVE' },
@@ -114,11 +115,11 @@ export async function getActivePlans(req: AuthRequest, res: Response) {
     });
   } catch (error) {
     console.error('Active plans error:', error);
-    res.status(500).json({ success: false, message: 'Active Plans 조회 실패' });
+    return next(new AppError(500, { success: false, message: 'Active Plans 조회 실패' }));
   }
 }
 
-export async function getMyAssignments(req: AuthRequest, res: Response) {
+export async function getMyAssignments(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const myAssignments = await prisma.planItem.findMany({
       where: {
@@ -140,11 +141,11 @@ export async function getMyAssignments(req: AuthRequest, res: Response) {
     res.json({ success: true, data: myAssignments });
   } catch (error) {
     console.error('My assignments error:', error);
-    res.status(500).json({ success: false, message: '내 할당 목록 조회 실패' });
+    return next(new AppError(500, { success: false, message: '내 할당 목록 조회 실패' }));
   }
 }
 
-export async function getRecentActivity(req: AuthRequest, res: Response) {
+export async function getRecentActivity(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     // 최근 실행된 테스트 결과 (PlanItem 업데이트 기준)
     const recentActivities = await prisma.planItem.findMany({
@@ -166,7 +167,7 @@ export async function getRecentActivity(req: AuthRequest, res: Response) {
     res.json({ success: true, data: recentActivities });
   } catch (error) {
     console.error('Recent activity error:', error);
-    res.status(500).json({ success: false, message: '최근 활동 조회 실패' });
+    return next(new AppError(500, { success: false, message: '최근 활동 조회 실패' }));
   }
 }
 

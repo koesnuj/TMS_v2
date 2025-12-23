@@ -1,12 +1,13 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { hashPassword } from '../utils/password';
+import { AppError } from '../errors/AppError';
 
 /**
  * 가입 대기 사용자 목록 조회
  * GET /api/admin/pending-users
  */
-export async function getPendingUsers(req: Request, res: Response): Promise<void> {
+export async function getPendingUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const pendingUsers = await prisma.user.findMany({
       where: {
@@ -31,10 +32,12 @@ export async function getPendingUsers(req: Request, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Get pending users error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 목록 조회 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '사용자 목록 조회 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 
@@ -42,7 +45,7 @@ export async function getPendingUsers(req: Request, res: Response): Promise<void
  * 모든 사용자 목록 조회 (관리자용)
  * GET /api/admin/users
  */
-export async function getAllUsers(req: Request, res: Response): Promise<void> {
+export async function getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -65,10 +68,12 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     console.error('Get all users error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 목록 조회 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '사용자 목록 조회 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 
@@ -76,7 +81,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
  * 사용자 승인/거절
  * PATCH /api/admin/users/approve
  */
-export async function approveUser(req: Request, res: Response): Promise<void> {
+export async function approveUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, action } = req.body;
 
@@ -134,10 +139,12 @@ export async function approveUser(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     console.error('Approve user error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 상태 업데이트 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '사용자 상태 업데이트 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 
@@ -145,7 +152,7 @@ export async function approveUser(req: Request, res: Response): Promise<void> {
  * 사용자 역할 변경
  * PATCH /api/admin/users/role
  */
-export async function updateUserRole(req: Request, res: Response): Promise<void> {
+export async function updateUserRole(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, role } = req.body;
 
@@ -201,10 +208,12 @@ export async function updateUserRole(req: Request, res: Response): Promise<void>
     });
   } catch (error) {
     console.error('Update user role error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 역할 업데이트 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '사용자 역할 업데이트 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 
@@ -212,7 +221,7 @@ export async function updateUserRole(req: Request, res: Response): Promise<void>
  * 사용자 상태 변경
  * PATCH /api/admin/users/status
  */
-export async function updateUserStatus(req: Request, res: Response): Promise<void> {
+export async function updateUserStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, status } = req.body;
 
@@ -268,10 +277,12 @@ export async function updateUserStatus(req: Request, res: Response): Promise<voi
     });
   } catch (error) {
     console.error('Update user status error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 상태 업데이트 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '사용자 상태 업데이트 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 
@@ -279,7 +290,7 @@ export async function updateUserStatus(req: Request, res: Response): Promise<voi
  * 비밀번호 초기화
  * POST /api/admin/users/reset-password
  */
-export async function resetPassword(req: Request, res: Response): Promise<void> {
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, newPassword } = req.body;
 
@@ -329,10 +340,12 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      message: '비밀번호 초기화 중 오류가 발생했습니다.',
-    });
+    return next(
+      new AppError(500, {
+        success: false,
+        message: '비밀번호 초기화 중 오류가 발생했습니다.',
+      })
+    );
   }
 }
 

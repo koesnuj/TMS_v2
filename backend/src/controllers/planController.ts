@@ -1,9 +1,10 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { AppError } from '../errors/AppError';
 
 // 플랜 생성
-export async function createPlan(req: AuthRequest, res: Response): Promise<void> {
+export async function createPlan(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { name, description, testCaseIds, assignee } = req.body;
 
@@ -42,12 +43,12 @@ export async function createPlan(req: AuthRequest, res: Response): Promise<void>
     res.status(201).json({ success: true, data: plan });
   } catch (error) {
     console.error('Create plan error:', error);
-    res.status(500).json({ success: false, message: '플랜 생성 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 생성 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 목록 조회
-export async function getPlans(req: Request, res: Response): Promise<void> {
+export async function getPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { status } = req.query;
     
@@ -93,12 +94,12 @@ export async function getPlans(req: Request, res: Response): Promise<void> {
     res.json({ success: true, data });
   } catch (error) {
     console.error('Get plans error:', error);
-    res.status(500).json({ success: false, message: '플랜 목록을 불러오는데 실패했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 목록을 불러오는데 실패했습니다.' }));
   }
 }
 
 // 플랜 상세 조회
-export async function getPlanDetail(req: Request, res: Response): Promise<void> {
+export async function getPlanDetail(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
 
@@ -129,12 +130,12 @@ export async function getPlanDetail(req: Request, res: Response): Promise<void> 
     res.json({ success: true, data: plan });
   } catch (error) {
     console.error('Get plan detail error:', error);
-    res.status(500).json({ success: false, message: '플랜 상세 정보를 불러오는데 실패했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 상세 정보를 불러오는데 실패했습니다.' }));
   }
 }
 
 // PlanItem 개별 업데이트
-export async function updatePlanItem(req: Request, res: Response): Promise<void> {
+export async function updatePlanItem(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId, itemId } = req.params;
     const { result, comment, assignee } = req.body;
@@ -172,12 +173,12 @@ export async function updatePlanItem(req: Request, res: Response): Promise<void>
     res.json({ success: true, data: updatedItem });
   } catch (error) {
     console.error('Update plan item error:', error);
-    res.status(500).json({ success: false, message: '테스트 결과 업데이트 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '테스트 결과 업데이트 중 오류가 발생했습니다.' }));
   }
 }
 
 // PlanItem 벌크 업데이트
-export async function bulkUpdatePlanItems(req: Request, res: Response): Promise<void> {
+export async function bulkUpdatePlanItems(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
     const { items, result, comment, assignee } = req.body; // items: array of planItemIds
@@ -228,12 +229,12 @@ export async function bulkUpdatePlanItems(req: Request, res: Response): Promise<
     });
   } catch (error) {
     console.error('Bulk update plan items error:', error);
-    res.status(500).json({ success: false, message: '일괄 업데이트 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '일괄 업데이트 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 업데이트 (이름, 설명, 테스트케이스 목록)
-export async function updatePlan(req: AuthRequest, res: Response): Promise<void> {
+export async function updatePlan(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
     const { name, description, testCaseIds } = req.body;
@@ -316,12 +317,12 @@ export async function updatePlan(req: AuthRequest, res: Response): Promise<void>
     res.json({ success: true, data: result, message: '플랜이 업데이트되었습니다.' });
   } catch (error) {
     console.error('Update plan error:', error);
-    res.status(500).json({ success: false, message: '플랜 업데이트 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 업데이트 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 아카이브
-export async function archivePlan(req: Request, res: Response): Promise<void> {
+export async function archivePlan(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
 
@@ -347,12 +348,12 @@ export async function archivePlan(req: Request, res: Response): Promise<void> {
     res.json({ success: true, data: updatedPlan, message: '플랜이 아카이브되었습니다.' });
   } catch (error) {
     console.error('Archive plan error:', error);
-    res.status(500).json({ success: false, message: '플랜 아카이브 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 아카이브 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 아카이브 해제 (복원)
-export async function unarchivePlan(req: Request, res: Response): Promise<void> {
+export async function unarchivePlan(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
 
@@ -378,12 +379,12 @@ export async function unarchivePlan(req: Request, res: Response): Promise<void> 
     res.json({ success: true, data: updatedPlan, message: '플랜이 복원되었습니다.' });
   } catch (error) {
     console.error('Unarchive plan error:', error);
-    res.status(500).json({ success: false, message: '플랜 복원 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 복원 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 삭제
-export async function deletePlan(req: Request, res: Response): Promise<void> {
+export async function deletePlan(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planId } = req.params;
 
@@ -409,12 +410,12 @@ export async function deletePlan(req: Request, res: Response): Promise<void> {
     res.json({ success: true, message: '플랜이 삭제되었습니다.' });
   } catch (error) {
     console.error('Delete plan error:', error);
-    res.status(500).json({ success: false, message: '플랜 삭제 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '플랜 삭제 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 일괄 아카이브
-export async function bulkArchivePlans(req: Request, res: Response): Promise<void> {
+export async function bulkArchivePlans(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planIds } = req.body;
 
@@ -438,12 +439,12 @@ export async function bulkArchivePlans(req: Request, res: Response): Promise<voi
     });
   } catch (error) {
     console.error('Bulk archive plans error:', error);
-    res.status(500).json({ success: false, message: '일괄 아카이브 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '일괄 아카이브 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 일괄 복원
-export async function bulkUnarchivePlans(req: Request, res: Response): Promise<void> {
+export async function bulkUnarchivePlans(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planIds } = req.body;
 
@@ -467,12 +468,12 @@ export async function bulkUnarchivePlans(req: Request, res: Response): Promise<v
     });
   } catch (error) {
     console.error('Bulk unarchive plans error:', error);
-    res.status(500).json({ success: false, message: '일괄 복원 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '일괄 복원 중 오류가 발생했습니다.' }));
   }
 }
 
 // 플랜 일괄 삭제
-export async function bulkDeletePlans(req: Request, res: Response): Promise<void> {
+export async function bulkDeletePlans(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { planIds } = req.body;
 
@@ -498,7 +499,7 @@ export async function bulkDeletePlans(req: Request, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Bulk delete plans error:', error);
-    res.status(500).json({ success: false, message: '일괄 삭제 중 오류가 발생했습니다.' });
+    return next(new AppError(500, { success: false, message: '일괄 삭제 중 오류가 발생했습니다.' }));
   }
 }
 
