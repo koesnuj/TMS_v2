@@ -16,7 +16,7 @@ export default defineConfig({
   /* 서버 자동 실행 설정 */
   webServer: [
     {
-      command: 'npm run dev --prefix backend',
+      command: 'node scripts/playwright/backend-dev.mjs',
       port: 3001,
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',
