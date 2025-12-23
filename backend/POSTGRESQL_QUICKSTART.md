@@ -5,9 +5,9 @@
 ### Windows (PowerShell)
 
 ```powershell
-# 1. Docker로 PostgreSQL 시작 (프로젝트 루트에서)
+# 1. Docker 또는 Podman으로 PostgreSQL 시작 (프로젝트 루트에서)
 cd ..
-docker-compose up -d
+.\scripts\start_postgres.ps1
 cd backend
 
 # 2. 자동 마이그레이션 스크립트 실행
@@ -65,6 +65,9 @@ npm run dev
 ```bash
 # Docker 컨테이너 확인
 docker ps
+
+# 또는 Podman 컨테이너 확인
+podman ps
 
 # 출력 예시:
 # CONTAINER ID   IMAGE              STATUS         PORTS                    NAMES
@@ -131,6 +134,11 @@ docker exec -it tms_postgres psql -U postgres -d tms_dev
 - Windows: https://www.docker.com/products/docker-desktop/
 - Mac: `brew install --cask docker`
 - Linux: https://docs.docker.com/engine/install/
+
+### Docker 대신 Podman을 쓰는 경우 (권장: Windows)
+- Podman Desktop 설치 후 `podman` CLI가 잡히는지 확인
+- 프로젝트 루트에서 실행:
+  - `.\scripts\start_postgres.ps1 -Engine podman`
 
 ### 포트 5432가 이미 사용 중
 ```yaml

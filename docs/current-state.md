@@ -13,6 +13,7 @@
 
 - `backend/`: Express + Prisma 기반 API 서버
 - `frontend/`: Vite + React SPA
+- `scripts/`: 로컬 개발 부트스트랩/DB 기동 스크립트
 - `tests/`: Playwright E2E 테스트
 - `docs/rules/`: 레포 규칙 문서
 - `playwright.config.ts`: E2E 실행 시 FE/BE 자동 기동 설정
@@ -197,5 +198,28 @@ tests
 - `npm run dev`: `vite`
 - `npm run build`: `tsc && vite build`
 - `npm run preview`: `vite preview`
+
+---
+
+## 5) 로컬 개발 환경 메모 (DB/컨테이너)
+
+### Prisma datasource (현재 스키마 기준)
+
+- `backend/prisma/schema.prisma`의 `datasource db.provider`는 **`postgresql`** 입니다.
+- `backend/env.example`도 `DATABASE_URL="postgresql://..."` 형태로 제공됩니다.
+
+### 컨테이너 기동 스크립트
+
+- `scripts/start_postgres.ps1`
+  - Docker가 있으면 `docker compose up -d postgres`(또는 `docker-compose`) 사용
+  - Docker가 없고 Podman이 있으면 `podman run`으로 Postgres 컨테이너(`tms_postgres`)를 생성/시작
+- `scripts/bootstrap_phase0_safety.ps1`
+  - 루트/백엔드/프론트 `npm ci` + DB 기동 + `prisma migrate deploy` + `seed`까지 자동화
+
+---
+
+## 6) 발견된 문서/구성 불일치(수정하지 않고 기록만)
+
+- `README.md`에는 “SQLite 사용”으로 안내되어 있으나, 현재 `backend/prisma/schema.prisma`는 **PostgreSQL** datasource로 설정되어 있습니다.
 
 
