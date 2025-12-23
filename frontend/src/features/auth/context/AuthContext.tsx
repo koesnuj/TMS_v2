@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../../../api/types';
+import { clearAuthStorage, loadStoredUser, persistUser } from './auth.storage';
 
 interface AuthContextType {
   user: User | null;
@@ -18,30 +19,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // 로컬스토리지에서 사용자 정보 복원
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUserState(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage:', error);
-        localStorage.removeItem('user');
-      }
-    }
+    const storedUser = loadStoredUser();
+    if (storedUser) setUserState(storedUser);
     setIsLoading(false);
   }, []);
 
   const setUser = (user: User | null) => {
     setUserState(user);
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
+    persistUser(user);
   };
 
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    clearAuthStorage();
     setUserState(null);
   };
 
