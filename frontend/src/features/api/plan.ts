@@ -42,6 +42,8 @@ export interface PlanDetail extends Plan {
   items: PlanItem[];
 }
 
+export type ClonePlanMode = 'clone' | 'rerun';
+
 export const getPlans = async (status: PlanStatusFilter = 'ACTIVE') => {
   const response = await api.get<{ success: boolean; data: Plan[] }>('/plans', { params: { status } });
   return response.data;
@@ -138,6 +140,18 @@ export const updatePlan = async (
 ) => {
   const response = await api.patch<{ success: boolean; data: PlanDetail; message: string }>(
     `/plans/${planId}`,
+    data
+  );
+  return response.data;
+};
+
+// 플랜 복제/재실행
+export const clonePlan = async (
+  planId: string,
+  data: { mode?: ClonePlanMode; name?: string; description?: string } = {}
+) => {
+  const response = await api.post<{ success: boolean; data: Plan; message: string }>(
+    `/plans/${planId}/clone`,
     data
   );
   return response.data;

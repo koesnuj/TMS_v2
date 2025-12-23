@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getPlanDetail, getPlans, PlanDetail, Plan, PlanItem, updatePlanItem, bulkUpdatePlanItems, TestResult, archivePlan, unarchivePlan, deletePlan } from '../api/plan';
+import { clonePlan, getPlanDetail, getPlans, PlanDetail, Plan, PlanItem, updatePlanItem, bulkUpdatePlanItems, TestResult, archivePlan, unarchivePlan, deletePlan } from '../api/plan';
 import { getAllUsers } from '../api/admin';
 import { User } from '../api/types';
-import { ArrowLeft, MessageSquare, CheckSquare, Square, Archive, ArchiveRestore, Trash2, ChevronDown, Search, ChevronRight, Folder, FolderOpen, X, PanelRightOpen, Edit } from 'lucide-react';
+import { ArrowLeft, MessageSquare, CheckSquare, Square, Archive, ArchiveRestore, Trash2, ChevronDown, Search, ChevronRight, Folder, FolderOpen, X, PanelRightOpen, Edit, Copy, RotateCcw } from 'lucide-react';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -297,6 +297,8 @@ const PlanDetailPage: React.FC = () => {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [isRerunModalOpen, setIsRerunModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Edit Modal State
@@ -482,6 +484,25 @@ const PlanDetailPage: React.FC = () => {
       navigate('/plans');
     } catch (error) {
       alert('삭제에 실패했습니다.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCloneOrRerun = async (mode: 'clone' | 'rerun') => {
+    if (!planId) return;
+    try {
+      setIsProcessing(true);
+      const response = await clonePlan(planId, { mode });
+      if (response.success) {
+        setIsCloneModalOpen(false);
+        setIsRerunModalOpen(false);
+        navigate(`/plans/${response.data.id}`);
+      } else {
+        alert('플랜 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      alert('플랜 생성에 실패했습니다.');
     } finally {
       setIsProcessing(false);
     }
@@ -688,6 +709,22 @@ const PlanDetailPage: React.FC = () => {
                   onClick={() => setIsEditModalOpen(true)}
                 >
                   수정
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Copy size={14} />}
+                  onClick={() => setIsCloneModalOpen(true)}
+                >
+                  복제
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<RotateCcw size={14} />}
+                  onClick={() => setIsRerunModalOpen(true)}
+                >
+                  재실행
                 </Button>
                 {plan.status === 'ACTIVE' ? (
                   <Button
@@ -989,6 +1026,28 @@ const PlanDetailPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Clone Confirm Modal */}
+      <ConfirmModal
+        isOpen={isCloneModalOpen}
+        onClose={() => setIsCloneModalOpen(false)}
+        onConfirm={() => handleCloneOrRerun('clone')}
+        title="플랜 복제"
+        message={`"${plan.name}" 플랜을 복제하시겠습니까? 실행 결과/메모를 포함한 동일한 플랜이 새로 생성됩니다.`}
+        confirmText={isProcessing ? '처리 중...' : '복제'}
+        variant="info"
+      />
+
+      {/* Rerun Confirm Modal */}
+      <ConfirmModal
+        isOpen={isRerunModalOpen}
+        onClose={() => setIsRerunModalOpen(false)}
+        onConfirm={() => handleCloneOrRerun('rerun')}
+        title="플랜 재실행"
+        message={`"${plan.name}" 플랜을 재실행용으로 생성하시겠습니까? 새 플랜이 생성되며 모든 결과/메모/실행일시가 초기화됩니다.`}
+        confirmText={isProcessing ? '처리 중...' : '재실행'}
+        variant="warning"
+      />
 
       {/* Archive Confirm Modal */}
       <ConfirmModal

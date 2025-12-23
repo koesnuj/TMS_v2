@@ -3,6 +3,8 @@ import prisma from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../errors/AppError';
 
+type CloneMode = 'clone' | 'rerun';
+
 // 플랜 생성
 export async function createPlan(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -44,6 +46,99 @@ export async function createPlan(req: AuthRequest, res: Response, next: NextFunc
   } catch (error) {
     console.error('Create plan error:', error);
     return next(new AppError(500, { success: false, message: '플랜 생성 중 오류가 발생했습니다.' }));
+  }
+}
+
+// 플랜 복제 / 재실행
+// - clone: 결과/메모/실행일시를 포함하여 그대로 복제
+// - rerun: 결과/메모/실행일시를 초기화하여 새로운 실행 플랜 생성
+export async function clonePlan(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { planId } = req.params;
+    const { mode, name, description } = (req.body || {}) as {
+      mode?: CloneMode;
+      name?: string;
+      description?: string;
+    };
+
+    const cloneMode: CloneMode = mode === 'rerun' ? 'rerun' : 'clone';
+
+    const sourcePlan = await prisma.plan.findUnique({
+      where: { id: planId },
+      include: {
+        items: {
+          select: {
+            testCaseId: true,
+            assignee: true,
+            result: true,
+            comment: true,
+            executedAt: true,
+            order: true,
+          },
+          orderBy: [{ order: 'asc' }],
+        },
+      },
+    });
+
+    if (!sourcePlan) {
+      res.status(404).json({ success: false, message: '플랜을 찾을 수 없습니다.' });
+      return;
+    }
+
+    const createdBy = req.user?.email || 'Unknown';
+
+    const defaultSuffix = cloneMode === 'rerun' ? '재실행' : '복제';
+    const newName =
+      (typeof name === 'string' && name.trim().length > 0 ? name.trim() : `${sourcePlan.name} (${defaultSuffix})`);
+
+    const newDescription =
+      typeof description === 'string' ? description : sourcePlan.description || null;
+
+    const newPlan = await prisma.$transaction(async (tx) => {
+      const created = await tx.plan.create({
+        data: {
+          name: newName,
+          description: newDescription,
+          createdBy,
+          status: 'ACTIVE',
+        },
+      });
+
+      const itemsData = sourcePlan.items.map((item, idx) => {
+        const base = {
+          planId: created.id,
+          testCaseId: item.testCaseId,
+          assignee: item.assignee || null,
+          order: item.order ?? idx + 1,
+        };
+
+        if (cloneMode === 'rerun') {
+          return { ...base, result: 'NOT_RUN', comment: null, executedAt: null };
+        }
+
+        return {
+          ...base,
+          result: item.result,
+          comment: item.comment ?? null,
+          executedAt: item.executedAt ?? null,
+        };
+      });
+
+      if (itemsData.length > 0) {
+        await tx.planItem.createMany({ data: itemsData });
+      }
+
+      return created;
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newPlan,
+      message: cloneMode === 'rerun' ? '플랜이 재실행용으로 생성되었습니다.' : '플랜이 복제되었습니다.',
+    });
+  } catch (error) {
+    console.error('Clone plan error:', error);
+    return next(new AppError(500, { success: false, message: '플랜 복제 중 오류가 발생했습니다.' }));
   }
 }
 

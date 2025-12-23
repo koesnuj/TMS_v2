@@ -4,6 +4,7 @@ import {
   createPlan, 
   getPlans, 
   getPlanDetail,
+  clonePlan,
   updatePlan,
   updatePlanItem, 
   bulkUpdatePlanItems,
@@ -24,6 +25,9 @@ router.post('/', authenticateToken, createPlan);
 router.patch('/bulk/archive', authenticateToken, bulkArchivePlans);
 router.patch('/bulk/unarchive', authenticateToken, bulkUnarchivePlans);
 router.delete('/bulk', authenticateToken, bulkDeletePlans);
+
+// Clone / Rerun
+router.post('/:planId/clone', authenticateToken, clonePlan);
 
 router.get('/:planId', authenticateToken, getPlanDetail);
 router.patch('/:planId', authenticateToken, updatePlan);

@@ -113,6 +113,7 @@ tests
 - `PATCH /api/plans/bulk/archive`
 - `PATCH /api/plans/bulk/unarchive`
 - `DELETE /api/plans/bulk`
+- `POST /api/plans/:planId/clone`
 - `GET /api/plans/:planId`
 - `PATCH /api/plans/:planId`
 - `DELETE /api/plans/:planId`
