@@ -364,6 +364,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             <button
               onClick={() => handleExport('csv')}
               disabled={isExporting}
+              data-testid="testcases-export-csv"
               className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isExporting ? (
@@ -376,6 +377,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             <button
               onClick={() => handleExport('excel')}
               disabled={isExporting}
+              data-testid="testcases-export-excel"
               className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isExporting ? (
@@ -1858,6 +1860,7 @@ const TestCasesPage: React.FC = () => {
                 variant="outline" 
                 icon={<Download size={16} />} 
                 onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                data-testid="testcases-export-button"
               >
                 Export
                 <ChevronDown size={14} className="ml-1" />
