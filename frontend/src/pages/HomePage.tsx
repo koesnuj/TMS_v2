@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth';
 import { getDashboardStats, getMyAssignments, getRecentActivity, DashboardStats, DashboardActivity } from '../api/dashboard';
 import { Card } from '../components/ui/Card';
 import { Badge, BadgeVariant } from '../components/ui/Badge';

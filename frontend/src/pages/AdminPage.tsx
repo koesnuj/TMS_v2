@@ -5,7 +5,7 @@ import { Shield, Users, Check, Key } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth';
 import { Input } from '../components/ui/Input'; // Input 컴포넌트 추가
 
 const AdminPage: React.FC = () => {

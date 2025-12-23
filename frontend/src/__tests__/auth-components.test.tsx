@@ -3,9 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import PrivateRoute from '../components/PrivateRoute';
-import RequireAdmin from '../components/RequireAdmin';
+import { AuthProvider, useAuth, PrivateRoute, RequireAdmin } from '../features/auth';
 
 function DebugAuth() {
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();

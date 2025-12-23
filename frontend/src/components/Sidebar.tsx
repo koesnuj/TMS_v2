@@ -9,7 +9,7 @@ import {
   BarChart2,
   Users
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth';
 
 interface SidebarItemProps {
   to: string;
