@@ -83,6 +83,21 @@ npm run dev
 
 ---
 
+## CI와 동일한 로컬 검증(권장)
+
+루트에서 아래 커맨드로 **CI와 같은 순서**로 실행됩니다:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
+```
+
+> 참고: 현재 ESLint는 아직 설정되어 있지 않아 `lint`는 “skip” 메시지만 출력합니다. (CI 안정성을 위해 스텁으로 유지)
+
+---
+
 ## 사용법
 
 1. 회원가입 및 관리자 승인 (첫 사용자는 자동 관리자 지정)

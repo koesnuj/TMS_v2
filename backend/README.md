@@ -153,3 +153,14 @@ enum Status {
 - **Prisma Studio**: `npm run prisma:studio` - 데이터베이스 GUI
 - **Hot Reload**: nodemon으로 코드 변경 시 자동 재시작
 
+---
+
+## 로그(Observability)
+
+- **로그 출력**: 표준 출력(stdout)
+- **로그 레벨**: `LOG_LEVEL` 환경 변수로 조절 (기본값: `info`)
+- **요청 상관관계 ID(Request Correlation)**:
+  - 요청 헤더 `X-Request-Id`가 들어오면 그대로 사용
+  - 없으면 서버가 내부적으로 생성(UUID)
+  - **응답에는 노출하지 않고(log only), 모든 요청/에러 로그에 포함**됩니다.
+

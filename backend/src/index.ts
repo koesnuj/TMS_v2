@@ -1,14 +1,17 @@
 import app from './app';
+import { logger } from './lib/logger';
 const PORT = process.env.PORT || 3001;
 
 // 서버 시작
 app.listen(PORT, () => {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`🚀 TMS Backend Server`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Server running on: http://localhost:${PORT}`);
-  console.log(`✅ Health check: http://localhost:${PORT}/health`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  logger.info(
+    {
+      env: process.env.NODE_ENV || 'development',
+      port: PORT,
+      health: `http://localhost:${PORT}/health`,
+    },
+    'backend_server_started'
+  );
 });
 
 export default app;
