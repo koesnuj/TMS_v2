@@ -10,12 +10,18 @@ import planRoutes from './routes/plans';
 import dashboardRoutes from './routes/dashboard';
 import uploadRoutes from './routes/upload';
 import { errorHandler, notFoundHandler } from './middleware/errorHandlers';
+import { requestContext } from './middleware/requestContext';
+import { requestLogger } from './middleware/requestLogger';
 
 // 환경 변수 로드
 dotenv.config();
 
 export function createApp(): Application {
   const app: Application = express();
+
+  // Correlation id + request logging (log-only; no response/header changes)
+  app.use(requestContext);
+  app.use(requestLogger);
 
   // CORS 설정
   const allowedOrigins = [
@@ -41,14 +47,6 @@ export function createApp(): Application {
   // JSON 파싱 미들웨어
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-
-  // 요청 로깅 미들웨어 (개발 환경)
-  if (process.env.NODE_ENV === 'development') {
-    app.use((req: Request, res: Response, next) => {
-      console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-      next();
-    });
-  }
 
   // Health check 엔드포인트
   app.get('/health', (req: Request, res: Response) => {

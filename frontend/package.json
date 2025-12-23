@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "node -e \"console.log('lint: skipped (eslint not configured)')\"",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run"

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "node -e \"console.log('lint: skipped (eslint not configured)')\"",
     "test": "vitest run",
     "start": "prisma migrate deploy && node dist/index.js",
     "postinstall": "prisma generate",
@@ -40,7 +42,8 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.555.0",
     "multer": "^2.0.2",
-    "papaparse": "^5.5.3"
+    "papaparse": "^5.5.3",
+    "pino": "^9.7.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

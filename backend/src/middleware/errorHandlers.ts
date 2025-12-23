@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../errors/AppError';
+import { logger } from '../lib/logger';
 
 export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({
@@ -17,11 +18,20 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
   }
 
   if (err instanceof AppError) {
+    // Keep client responses identical; log only.
+    logger.warn(
+      {
+        requestId: req.requestId,
+        status: err.status,
+        body: err.body,
+      },
+      'app_error'
+    );
     res.status(err.status).json(err.body);
     return;
   }
 
-  console.error('Server error:', err);
+  logger.error({ requestId: req.requestId, err }, 'unhandled_error');
 
   const message =
     err instanceof Error

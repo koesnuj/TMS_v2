@@ -8,6 +8,10 @@
   ],
   "main": "index.js",
   "scripts": {
+    "lint": "npm -C frontend run lint && npm -C backend run lint",
+    "typecheck": "npm -C frontend run typecheck && npm -C backend run typecheck",
+    "test:unit": "npm -C frontend run test:run && npm -C backend run test",
+    "build": "npm -C frontend run build && npm -C backend run build",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
